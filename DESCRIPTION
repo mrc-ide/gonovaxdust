@@ -24,3 +24,4 @@ Remotes:
     mrc-ide/odin.dust
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
+SystemRequirements: C++11
