@@ -1,0 +1,26 @@
+Package: gonovax.dust
+Title: Stochastic compartmental model of gonorrhoea with vaccination
+Version: 0.0.1
+LinkingTo: cpp11, dust
+Authors@R:
+    c( person(given = "Lilith",
+           family = "Whittles",
+           role = c("aut", "cre"),
+           email = "l.whittles@imperial.ac.uk"))
+Description: Stochastic compartmental model of gonorrhoea vaccination, using odin.dust.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Language: en-GB
+Imports: 
+    dust (>= 0.9.2)
+Suggests:
+    testthat,
+    odin (>= 1.1.12),
+    odin.dust (>= 0.2.7),
+Remotes:
+    mrc-ide/odin,
+    mrc-ide/dust,
+    mrc-ide/odin.dust
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
