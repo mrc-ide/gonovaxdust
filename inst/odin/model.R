@@ -67,11 +67,11 @@ r_S[, ] <- r_ST[i, j] + exr
 r_T[, ] <- r_TU[i, j] + exr
 
 ## Draws from binomial distributions for numbers leaving each compartments
-n_U[, ] <- rbinom(U[i, j], 1 - exp(r_U[i, j] * dt))
-n_I[, ] <- rbinom(I[i, j], 1 - exp(r_I[i, j] * dt))
-n_A[, ] <- rbinom(A[i, j], 1 - exp(r_A[i, j] * dt))
-n_S[, ] <- rbinom(S[i, j], 1 - exp(r_S[i, j] * dt))
-n_T[, ] <- rbinom(T[i, j], 1 - exp(r_T[i, j] * dt))
+n_U[, ] <- rbinom(U[i, j], 1 - exp(-r_U[i, j] * dt))
+n_I[, ] <- rbinom(I[i, j], 1 - exp(-r_I[i, j] * dt))
+n_A[, ] <- rbinom(A[i, j], 1 - exp(-r_A[i, j] * dt))
+n_S[, ] <- rbinom(S[i, j], 1 - exp(-r_S[i, j] * dt))
+n_T[, ] <- rbinom(T[i, j], 1 - exp(-r_T[i, j] * dt))
 
 # Draw the number of leavers from each compartment
 n_Ux[, ] <- rbinom(n_U[i, j], exr / r_U[i, j])
@@ -104,7 +104,7 @@ n_vod[, , ] <- rbinom(n_TU[i, k], vod[i, j, k] * vax_switch)
 n_vbe[, , ] <- rbinom(n_xU[i, k], vbe[i, j, k])
 
 # Waning (inter-stratum transition) occurs after inter-compartment transition
-wU[, , ] <- rbinom(U[i, k] - n_U[i, k], w[j, k])
+wU[, , ] <- rbinom(U[i, k] - n_UI[i, j] - n_Ux[i, j], w[j, k])
 wI[, , ] <- rbinom(I[i, k] - n_I[i, k], w[j, k])
 wA[, , ] <- rbinom(A[i, k] - n_A[i, k], w[j, k])
 wS[, , ] <- rbinom(S[i, k] - n_S[i, k], w[j, k])

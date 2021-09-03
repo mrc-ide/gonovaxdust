@@ -453,7 +453,7 @@ public:
     }
     for (int i = 1; i <= shared->dim_n_I_1; ++i) {
       for (int j = 1; j <= shared->dim_n_I_2; ++j) {
-        internal.n_I[i - 1 + shared->dim_n_I_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(I[shared->dim_I_1 * (j - 1) + i - 1]), 1 - std::exp(shared->r_I[shared->dim_r_I_1 * (j - 1) + i - 1] * shared->dt));
+        internal.n_I[i - 1 + shared->dim_n_I_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(I[shared->dim_I_1 * (j - 1) + i - 1]), 1 - std::exp(- shared->r_I[shared->dim_r_I_1 * (j - 1) + i - 1] * shared->dt));
       }
     }
     for (int i = 1; i <= shared->dim_n_vbe_1; ++i) {
@@ -482,7 +482,7 @@ public:
     }
     for (int i = 1; i <= shared->dim_n_A_1; ++i) {
       for (int j = 1; j <= shared->dim_n_A_2; ++j) {
-        internal.n_A[i - 1 + shared->dim_n_A_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(A[shared->dim_A_1 * (j - 1) + i - 1]), 1 - std::exp(internal.r_A[shared->dim_r_A_1 * (j - 1) + i - 1] * shared->dt));
+        internal.n_A[i - 1 + shared->dim_n_A_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(A[shared->dim_A_1 * (j - 1) + i - 1]), 1 - std::exp(- internal.r_A[shared->dim_r_A_1 * (j - 1) + i - 1] * shared->dt));
       }
     }
     for (int i = 1; i <= shared->dim_n_Ix_1; ++i) {
@@ -492,17 +492,17 @@ public:
     }
     for (int i = 1; i <= shared->dim_n_S_1; ++i) {
       for (int j = 1; j <= shared->dim_n_S_2; ++j) {
-        internal.n_S[i - 1 + shared->dim_n_S_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(S[shared->dim_S_1 * (j - 1) + i - 1]), 1 - std::exp(shared->r_S[shared->dim_r_S_1 * (j - 1) + i - 1] * shared->dt));
+        internal.n_S[i - 1 + shared->dim_n_S_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(S[shared->dim_S_1 * (j - 1) + i - 1]), 1 - std::exp(- shared->r_S[shared->dim_r_S_1 * (j - 1) + i - 1] * shared->dt));
       }
     }
     for (int i = 1; i <= shared->dim_n_T_1; ++i) {
       for (int j = 1; j <= shared->dim_n_T_2; ++j) {
-        internal.n_T[i - 1 + shared->dim_n_T_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(T[shared->dim_T_1 * (j - 1) + i - 1]), 1 - std::exp(shared->r_T[shared->dim_r_T_1 * (j - 1) + i - 1] * shared->dt));
+        internal.n_T[i - 1 + shared->dim_n_T_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(T[shared->dim_T_1 * (j - 1) + i - 1]), 1 - std::exp(- shared->r_T[shared->dim_r_T_1 * (j - 1) + i - 1] * shared->dt));
       }
     }
     for (int i = 1; i <= shared->dim_n_U_1; ++i) {
       for (int j = 1; j <= shared->dim_n_U_2; ++j) {
-        internal.n_U[i - 1 + shared->dim_n_U_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(U[shared->dim_U_1 * (j - 1) + i - 1]), 1 - std::exp(internal.r_U[shared->dim_r_U_1 * (j - 1) + i - 1] * shared->dt));
+        internal.n_U[i - 1 + shared->dim_n_U_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(U[shared->dim_U_1 * (j - 1) + i - 1]), 1 - std::exp(- internal.r_U[shared->dim_r_U_1 * (j - 1) + i - 1] * shared->dt));
       }
     }
     for (int i = 1; i <= shared->dim_wI_1; ++i) {
@@ -558,13 +558,6 @@ public:
       for (int j = 1; j <= shared->dim_wT_2; ++j) {
         for (int k = 1; k <= shared->dim_wT_3; ++k) {
           internal.wT[i - 1 + shared->dim_wT_1 * (j - 1) + shared->dim_wT_12 * (k - 1)] = dust::distr::rbinom(rng_state, std::round(T[shared->dim_T_1 * (k - 1) + i - 1] - internal.n_T[shared->dim_n_T_1 * (k - 1) + i - 1]), shared->w[shared->dim_w_1 * (k - 1) + j - 1]);
-        }
-      }
-    }
-    for (int i = 1; i <= shared->dim_wU_1; ++i) {
-      for (int j = 1; j <= shared->dim_wU_2; ++j) {
-        for (int k = 1; k <= shared->dim_wU_3; ++k) {
-          internal.wU[i - 1 + shared->dim_wU_1 * (j - 1) + shared->dim_wU_12 * (k - 1)] = dust::distr::rbinom(rng_state, std::round(U[shared->dim_U_1 * (k - 1) + i - 1] - internal.n_U[shared->dim_n_U_1 * (k - 1) + i - 1]), shared->w[shared->dim_w_1 * (k - 1) + j - 1]);
         }
       }
     }
@@ -649,6 +642,13 @@ public:
     for (int i = 1; i <= shared->dim_T_1; ++i) {
       for (int j = 1; j <= shared->dim_T_2; ++j) {
         state_next[shared->offset_variable_T + i - 1 + shared->dim_T_1 * (j - 1)] = internal.n_ST[shared->dim_n_ST_1 * (j - 1) + i - 1] + internal.n_AT[shared->dim_n_AT_1 * (j - 1) + i - 1] - internal.n_T[shared->dim_n_T_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wT.data(), i - 1, i, j - 1, j, 0, shared->dim_wT_3, shared->dim_wT_1, shared->dim_wT_12);
+      }
+    }
+    for (int i = 1; i <= shared->dim_wU_1; ++i) {
+      for (int j = 1; j <= shared->dim_wU_2; ++j) {
+        for (int k = 1; k <= shared->dim_wU_3; ++k) {
+          internal.wU[i - 1 + shared->dim_wU_1 * (j - 1) + shared->dim_wU_12 * (k - 1)] = dust::distr::rbinom(rng_state, std::round(U[shared->dim_U_1 * (k - 1) + i - 1] - internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1] - internal.n_Ux[shared->dim_n_Ux_1 * (j - 1) + i - 1]), shared->w[shared->dim_w_1 * (k - 1) + j - 1]);
+        }
       }
     }
     for (int i = 1; i <= shared->dim_n_vos_1; ++i) {
