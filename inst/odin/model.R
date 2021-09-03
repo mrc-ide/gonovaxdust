@@ -27,17 +27,17 @@ update(eta[2]) <- if (as.integer(step) >= length(eta_h_step))
 
 ## Core equations for transitions between compartments:
 
-update(U[, ]) <- n_xU[i, j] - n_UI[i, j] - n_Ux[i, j] + n_AU[i, j] +
+update(U[, ]) <- U[i, j] + n_xU[i, j] - n_UI[i, j] - n_Ux[i, j] + n_AU[i, j] +
   n_TU[i, j] + sum(wU[i, j, ]) -
   sum(n_vbe[i, j, ]) - sum(n_vod[i, j, ]) - sum(n_vos[i, j, ])
 
-update(I[, ]) <- n_UI[i, j] - n_I[i, j] + sum(wI[i, j, ])
+update(I[, ]) <- I[i, j] + n_UI[i, j] - n_I[i, j] + sum(wI[i, j, ])
 
-update(A[, ]) <- n_IA[i, j] - n_A[i, j] + sum(wA[i, j, ])
+update(A[, ]) <- A[i, j] + n_IA[i, j] - n_A[i, j] + sum(wA[i, j, ])
 
-update(S[, ]) <- n_IS[i, j] - n_S[i, j] + sum(wS[i, j, ])
+update(S[, ]) <- S[i, j] + n_IS[i, j] - n_S[i, j] + sum(wS[i, j, ])
 
-update(T[, ]) <- n_ST[i, j] + n_AT[i, j] - n_T[i, j] + sum(wT[i, j, ])
+update(T[, ]) <- T[i, j] + n_ST[i, j] + n_AT[i, j] - n_T[i, j] + sum(wT[i, j, ])
 
 ## Update population size
 update(N[, ]) <- U[i, j] + I[i, j] + A[i, j] + S[i, j] + T[i, j]

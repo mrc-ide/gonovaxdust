@@ -661,7 +661,7 @@ public:
     state_next[4] = odin_sum1<real_t>(internal.n_Ux.data(), 0, shared->dim_n_Ux) + odin_sum1<real_t>(internal.n_Ix.data(), 0, shared->dim_n_Ix) + odin_sum1<real_t>(internal.n_Ax.data(), 0, shared->dim_n_Ax) + odin_sum1<real_t>(internal.n_Sx.data(), 0, shared->dim_n_Sx) + odin_sum1<real_t>(internal.n_Tx.data(), 0, shared->dim_n_Tx);
     for (int i = 1; i <= shared->dim_S_1; ++i) {
       for (int j = 1; j <= shared->dim_S_2; ++j) {
-        state_next[shared->offset_variable_S + i - 1 + shared->dim_S_1 * (j - 1)] = internal.n_IS[shared->dim_n_IS_1 * (j - 1) + i - 1] - internal.n_S[shared->dim_n_S_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wS.data(), i - 1, i, j - 1, j, 0, shared->dim_wS_3, shared->dim_wS_1, shared->dim_wS_12);
+        state_next[shared->offset_variable_S + i - 1 + shared->dim_S_1 * (j - 1)] = S[shared->dim_S_1 * (j - 1) + i - 1] + internal.n_IS[shared->dim_n_IS_1 * (j - 1) + i - 1] - internal.n_S[shared->dim_n_S_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wS.data(), i - 1, i, j - 1, j, 0, shared->dim_wS_3, shared->dim_wS_1, shared->dim_wS_12);
       }
     }
     for (int i = 1; i <= shared->dim_n_AU_1; ++i) {
@@ -683,7 +683,7 @@ public:
     }
     for (int i = 1; i <= shared->dim_A_1; ++i) {
       for (int j = 1; j <= shared->dim_A_2; ++j) {
-        state_next[shared->offset_variable_A + i - 1 + shared->dim_A_1 * (j - 1)] = internal.n_IA[shared->dim_n_IA_1 * (j - 1) + i - 1] - internal.n_A[shared->dim_n_A_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wA.data(), i - 1, i, j - 1, j, 0, shared->dim_wA_3, shared->dim_wA_1, shared->dim_wA_12);
+        state_next[shared->offset_variable_A + i - 1 + shared->dim_A_1 * (j - 1)] = A[shared->dim_A_1 * (j - 1) + i - 1] + internal.n_IA[shared->dim_n_IA_1 * (j - 1) + i - 1] - internal.n_A[shared->dim_n_A_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wA.data(), i - 1, i, j - 1, j, 0, shared->dim_wA_3, shared->dim_wA_1, shared->dim_wA_12);
       }
     }
     for (int i = 1; i <= shared->dim_cum_diag_a_1; ++i) {
@@ -708,12 +708,12 @@ public:
     }
     for (int i = 1; i <= shared->dim_I_1; ++i) {
       for (int j = 1; j <= shared->dim_I_2; ++j) {
-        state_next[shared->offset_variable_I + i - 1 + shared->dim_I_1 * (j - 1)] = internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1] - internal.n_I[shared->dim_n_I_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wI.data(), i - 1, i, j - 1, j, 0, shared->dim_wI_3, shared->dim_wI_1, shared->dim_wI_12);
+        state_next[shared->offset_variable_I + i - 1 + shared->dim_I_1 * (j - 1)] = I[shared->dim_I_1 * (j - 1) + i - 1] + internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1] - internal.n_I[shared->dim_n_I_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wI.data(), i - 1, i, j - 1, j, 0, shared->dim_wI_3, shared->dim_wI_1, shared->dim_wI_12);
       }
     }
     for (int i = 1; i <= shared->dim_T_1; ++i) {
       for (int j = 1; j <= shared->dim_T_2; ++j) {
-        state_next[shared->offset_variable_T + i - 1 + shared->dim_T_1 * (j - 1)] = internal.n_ST[shared->dim_n_ST_1 * (j - 1) + i - 1] + internal.n_AT[shared->dim_n_AT_1 * (j - 1) + i - 1] - internal.n_T[shared->dim_n_T_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wT.data(), i - 1, i, j - 1, j, 0, shared->dim_wT_3, shared->dim_wT_1, shared->dim_wT_12);
+        state_next[shared->offset_variable_T + i - 1 + shared->dim_T_1 * (j - 1)] = T[shared->dim_T_1 * (j - 1) + i - 1] + internal.n_ST[shared->dim_n_ST_1 * (j - 1) + i - 1] + internal.n_AT[shared->dim_n_AT_1 * (j - 1) + i - 1] - internal.n_T[shared->dim_n_T_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wT.data(), i - 1, i, j - 1, j, 0, shared->dim_wT_3, shared->dim_wT_1, shared->dim_wT_12);
       }
     }
     for (int i = 1; i <= shared->dim_wU_1; ++i) {
@@ -742,7 +742,7 @@ public:
     }
     for (int i = 1; i <= shared->dim_U_1; ++i) {
       for (int j = 1; j <= shared->dim_U_2; ++j) {
-        state_next[shared->offset_variable_U + i - 1 + shared->dim_U_1 * (j - 1)] = internal.n_xU[shared->dim_n_xU_1 * (j - 1) + i - 1] - internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1] - internal.n_Ux[shared->dim_n_Ux_1 * (j - 1) + i - 1] + internal.n_AU[shared->dim_n_AU_1 * (j - 1) + i - 1] + internal.n_TU[shared->dim_n_TU_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wU.data(), i - 1, i, j - 1, j, 0, shared->dim_wU_3, shared->dim_wU_1, shared->dim_wU_12) - odin_sum3<real_t>(internal.n_vbe.data(), i - 1, i, j - 1, j, 0, shared->dim_n_vbe_3, shared->dim_n_vbe_1, shared->dim_n_vbe_12) - odin_sum3<real_t>(internal.n_vod.data(), i - 1, i, j - 1, j, 0, shared->dim_n_vod_3, shared->dim_n_vod_1, shared->dim_n_vod_12) - odin_sum3<real_t>(internal.n_vos.data(), i - 1, i, j - 1, j, 0, shared->dim_n_vos_3, shared->dim_n_vos_1, shared->dim_n_vos_12);
+        state_next[shared->offset_variable_U + i - 1 + shared->dim_U_1 * (j - 1)] = U[shared->dim_U_1 * (j - 1) + i - 1] + internal.n_xU[shared->dim_n_xU_1 * (j - 1) + i - 1] - internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1] - internal.n_Ux[shared->dim_n_Ux_1 * (j - 1) + i - 1] + internal.n_AU[shared->dim_n_AU_1 * (j - 1) + i - 1] + internal.n_TU[shared->dim_n_TU_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wU.data(), i - 1, i, j - 1, j, 0, shared->dim_wU_3, shared->dim_wU_1, shared->dim_wU_12) - odin_sum3<real_t>(internal.n_vbe.data(), i - 1, i, j - 1, j, 0, shared->dim_n_vbe_3, shared->dim_n_vbe_1, shared->dim_n_vbe_12) - odin_sum3<real_t>(internal.n_vod.data(), i - 1, i, j - 1, j, 0, shared->dim_n_vod_3, shared->dim_n_vod_1, shared->dim_n_vod_12) - odin_sum3<real_t>(internal.n_vos.data(), i - 1, i, j - 1, j, 0, shared->dim_n_vos_3, shared->dim_n_vos_1, shared->dim_n_vos_12);
       }
     }
   }
