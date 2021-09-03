@@ -404,8 +404,12 @@ public:
     const real_t * T = state + shared->offset_variable_T;
     const real_t * N = state + shared->offset_variable_N;
     const real_t * lambda = state + shared->offset_variable_lambda;
+    const real_t * cum_incid = state + shared->offset_variable_cum_incid;
+    const real_t * cum_diag_a = state + shared->offset_variable_cum_diag_a;
+    const real_t * cum_diag_s = state + shared->offset_variable_cum_diag_s;
     const real_t * cum_treated = state + shared->offset_variable_cum_treated;
     const real_t * cum_screened = state + shared->offset_variable_cum_screened;
+    const real_t * cum_vaccinated = state + shared->offset_variable_cum_vaccinated;
     state_next[0] = (step + 1) * shared->dt;
     state_next[2] = odin_sum1<real_t>(cum_treated, 0, shared->dim_cum_treated) + odin_sum1<real_t>(cum_screened, 0, shared->dim_cum_screened);
     state_next[1] = odin_sum1<real_t>(cum_treated, 0, shared->dim_cum_treated);
@@ -616,22 +620,22 @@ public:
     }
     for (int i = 1; i <= shared->dim_cum_diag_a_1; ++i) {
       for (int j = 1; j <= shared->dim_cum_diag_a_2; ++j) {
-        state_next[shared->offset_variable_cum_diag_a + i - 1 + shared->dim_cum_diag_a_1 * (j - 1)] = internal.n_AT[shared->dim_n_AT_1 * (j - 1) + i - 1];
+        state_next[shared->offset_variable_cum_diag_a + i - 1 + shared->dim_cum_diag_a_1 * (j - 1)] = cum_diag_a[shared->dim_cum_diag_a_1 * (j - 1) + i - 1] + internal.n_AT[shared->dim_n_AT_1 * (j - 1) + i - 1];
       }
     }
     for (int i = 1; i <= shared->dim_cum_diag_s_1; ++i) {
       for (int j = 1; j <= shared->dim_cum_diag_s_2; ++j) {
-        state_next[shared->offset_variable_cum_diag_s + i - 1 + shared->dim_cum_diag_s_1 * (j - 1)] = internal.n_ST[shared->dim_n_ST_1 * (j - 1) + i - 1];
+        state_next[shared->offset_variable_cum_diag_s + i - 1 + shared->dim_cum_diag_s_1 * (j - 1)] = cum_diag_s[shared->dim_cum_diag_s_1 * (j - 1) + i - 1] + internal.n_ST[shared->dim_n_ST_1 * (j - 1) + i - 1];
       }
     }
     for (int i = 1; i <= shared->dim_cum_incid_1; ++i) {
       for (int j = 1; j <= shared->dim_cum_incid_2; ++j) {
-        state_next[shared->offset_variable_cum_incid + i - 1 + shared->dim_cum_incid_1 * (j - 1)] = internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1];
+        state_next[shared->offset_variable_cum_incid + i - 1 + shared->dim_cum_incid_1 * (j - 1)] = cum_incid[shared->dim_cum_incid_1 * (j - 1) + i - 1] + internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1];
       }
     }
     for (int i = 1; i <= shared->dim_cum_treated_1; ++i) {
       for (int j = 1; j <= shared->dim_cum_treated_2; ++j) {
-        state_next[shared->offset_variable_cum_treated + i - 1 + shared->dim_cum_treated_1 * (j - 1)] = internal.n_TU[shared->dim_n_TU_1 * (j - 1) + i - 1];
+        state_next[shared->offset_variable_cum_treated + i - 1 + shared->dim_cum_treated_1 * (j - 1)] = cum_treated[shared->dim_cum_treated_1 * (j - 1) + i - 1] + internal.n_TU[shared->dim_n_TU_1 * (j - 1) + i - 1];
       }
     }
     for (int i = 1; i <= shared->dim_I_1; ++i) {
@@ -660,12 +664,12 @@ public:
     }
     for (int i = 1; i <= shared->dim_cum_screened_1; ++i) {
       for (int j = 1; j <= shared->dim_cum_screened_2; ++j) {
-        state_next[shared->offset_variable_cum_screened + i - 1 + shared->dim_cum_screened_1 * (j - 1)] = internal.n_UU[shared->dim_n_UU_1 * (j - 1) + i - 1];
+        state_next[shared->offset_variable_cum_screened + i - 1 + shared->dim_cum_screened_1 * (j - 1)] = cum_screened[shared->dim_cum_screened_1 * (j - 1) + i - 1] + internal.n_UU[shared->dim_n_UU_1 * (j - 1) + i - 1];
       }
     }
     for (int i = 1; i <= shared->dim_cum_vaccinated_1; ++i) {
       for (int j = 1; j <= shared->dim_cum_vaccinated_2; ++j) {
-        state_next[shared->offset_variable_cum_vaccinated + i - 1 + shared->dim_cum_vaccinated_1 * (j - 1)] = internal.n_vos[shared->dim_n_vos_12 * (j - 1) + shared->dim_n_vos_1 * (j - 1) + i - 1] + internal.n_vod[shared->dim_n_vod_12 * (j - 1) + shared->dim_n_vod_1 * (j - 1) + i - 1] + internal.n_vbe[shared->dim_n_vbe_12 * (j - 1) + shared->dim_n_vbe_1 * (j - 1) + i - 1];
+        state_next[shared->offset_variable_cum_vaccinated + i - 1 + shared->dim_cum_vaccinated_1 * (j - 1)] = cum_vaccinated[shared->dim_cum_vaccinated_1 * (j - 1) + i - 1] + internal.n_vos[shared->dim_n_vos_12 * (j - 1) + shared->dim_n_vos_1 * (j - 1) + i - 1] + internal.n_vod[shared->dim_n_vod_12 * (j - 1) + shared->dim_n_vod_1 * (j - 1) + i - 1] + internal.n_vbe[shared->dim_n_vbe_12 * (j - 1) + shared->dim_n_vbe_1 * (j - 1) + i - 1];
       }
     }
     for (int i = 1; i <= shared->dim_U_1; ++i) {
