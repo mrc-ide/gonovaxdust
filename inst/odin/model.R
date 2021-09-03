@@ -111,12 +111,13 @@ wS[, , ] <- rbinom(S[i, k] - n_S[i, k], w[j, k])
 wT[, , ] <- rbinom(T[i, k] - n_T[i, k], w[j, k])
 
 ## outputs
-update(cum_incid[, ])      <- n_UI[i, j]
-update(cum_diag_a[, ])     <- n_AT[i, j]
-update(cum_diag_s[, ])     <- n_ST[i, j]
-update(cum_treated[, ])    <- n_TU[i, j]
-update(cum_screened[, ])   <- n_UU[i, j]
-update(cum_vaccinated[, ]) <- n_vos[i, j, j] + n_vod[i, j, j] + n_vbe[i, j, j]
+update(cum_incid[, ])    <- cum_incid[i, j] + n_UI[i, j]
+update(cum_diag_a[, ])   <- cum_diag_a[i, j] + n_AT[i, j]
+update(cum_diag_s[, ])   <- cum_diag_s[i, j] + n_ST[i, j]
+update(cum_treated[, ])  <- cum_treated[i, j] + n_TU[i, j]
+update(cum_screened[, ]) <- cum_screened[i, j] + n_UU[i, j]
+update(cum_vaccinated[, ]) <-
+  cum_vaccinated[i, j] + n_vos[i, j, j] + n_vod[i, j, j] + n_vbe[i, j, j]
 
 # aggregated time series for fitting mcmc
 update(tot_treated) <- sum(cum_treated)
