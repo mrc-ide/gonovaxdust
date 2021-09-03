@@ -1,4 +1,4 @@
-Package: gonovax.dust
+Package: gonovaxdust
 Title: Stochastic compartmental model of gonorrhoea with vaccination
 Version: 0.0.1
 LinkingTo: cpp11, dust

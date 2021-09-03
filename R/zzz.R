@@ -1,1 +1,1 @@
-##' @useDynLib gonovax.dust, .registration = TRUE
+##' @useDynLib gonovaxdust, .registration = TRUE
