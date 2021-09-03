@@ -59,7 +59,29 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-Stochastic compartmental model of gonorrhoea vaccination, using odin.dust.
+<div id="gonovaxdust" class="section level1">
+<div class="page-header"><h1 class="hasAnchor">
+<a href="#gonovaxdust" class="anchor"></a>gonovaxdust</h1></div>
+<!-- badges: start -->
+
+<p>This package implements a stochastic compartmental model of gonorrhoea infection with vaccination.</p>
+<div id="installation" class="section level2">
+<h2 class="hasAnchor">
+<a href="#installation" class="anchor"></a>Installation</h2>
+<p>You will need a compiler to install dependencies for the package, and to build the models. Use <code><a href="https://rdrr.io/pkg/pkgbuild/man/has_build_tools.html">pkgbuild::check_build_tools()</a></code> to see if your system is usable.</p>
+<p>You will need the packages <code>odin.dust</code>, which can be installed using:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"mrc-ide/odin.dust"</span>, upgrade <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
+<p>The package can then be installed directly from GitHub with:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"mrc-ide/gonovaxdust"</span>, upgrade <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
+</div>
+<div id="license" class="section level2">
+<h2 class="hasAnchor">
+<a href="#license" class="anchor"></a>License</h2>
+<p>MIT © Imperial College of Science, Technology and Medicine</p>
+</div>
+</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -76,7 +98,14 @@ Stochastic compartmental model of gonorrhoea vaccination, using odin.dust.
 </ul>
 </div>
 
-  </div>
+  <div class="dev-status">
+<h2>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://www.repostatus.org/#concept"><img src="https://www.repostatus.org/badges/latest/concept.svg" alt="Project Status: Concept – Minimal or no implementation has been done yet, or the repository is only intended to be a limited example, demo, or proof-of-concept."></a></li>
+<li><a href="https://github.com/mrc-ide/gonovaxdust/actions"><img src="https://github.com/mrc-ide/gonovaxdust/workflows/R-CMD-check/badge.svg" alt="R build status"></a></li>
+</ul>
+</div>
+</div>
 </div>
 
 
