@@ -5,6 +5,26 @@ template <typename real_t, typename container>
 HOSTDEVICE real_t odin_sum2(const container x, int from_i, int to_i, int from_j, int to_j, int dim_x_1);
 template <typename real_t, typename container>
 HOSTDEVICE real_t odin_sum3(const container x, int from_i, int to_i, int from_j, int to_j, int from_k, int to_k, int dim_x_1, int dim_x_12);
+template <typename real_t, typename T, typename U>
+HOSTDEVICE real_t fmodr(T x, U y) {
+  real_t tmp = std::fmod(static_cast<real_t>(x), static_cast<real_t>(y));
+  if (tmp * y < 0) {
+    tmp += y;
+  }
+  return tmp;
+}
+
+// These exist to support the model on the gpu, as in C++14 std::min
+// and std::max are constexpr and error without --expt-relaxed-constexpr
+template <typename T>
+HOSTDEVICE T odin_min(T x, T y) {
+  return x < y ? x : y;
+}
+
+template <typename T>
+HOSTDEVICE T odin_max(T x, T y) {
+  return x > y ? x : y;
+}
 // [[dust::class(model)]]
 // [[dust::param(A0, has_default = FALSE, default_value = NULL, rank = 2, min = -Inf, max = Inf, integer = FALSE)]]
 // [[dust::param(beta_step, has_default = FALSE, default_value = NULL, rank = 1, min = -Inf, max = Inf, integer = FALSE)]]
@@ -13,6 +33,7 @@ HOSTDEVICE real_t odin_sum3(const container x, int from_i, int to_i, int from_j,
 // [[dust::param(eta_h_step, has_default = FALSE, default_value = NULL, rank = 1, min = -Inf, max = Inf, integer = FALSE)]]
 // [[dust::param(eta_l_step, has_default = FALSE, default_value = NULL, rank = 1, min = -Inf, max = Inf, integer = FALSE)]]
 // [[dust::param(exr, has_default = FALSE, default_value = NULL, rank = 0, min = -Inf, max = Inf, integer = FALSE)]]
+// [[dust::param(fix_N, has_default = FALSE, default_value = NULL, rank = 0, min = -Inf, max = Inf, integer = FALSE)]]
 // [[dust::param(I0, has_default = FALSE, default_value = NULL, rank = 2, min = -Inf, max = Inf, integer = FALSE)]]
 // [[dust::param(mu, has_default = FALSE, default_value = NULL, rank = 0, min = -Inf, max = Inf, integer = FALSE)]]
 // [[dust::param(nu, has_default = FALSE, default_value = NULL, rank = 0, min = -Inf, max = Inf, integer = FALSE)]]
@@ -69,6 +90,12 @@ public:
     int dim_cum_vaccinated;
     int dim_cum_vaccinated_1;
     int dim_cum_vaccinated_2;
+    int dim_diag_a;
+    int dim_diag_a_1;
+    int dim_diag_a_2;
+    int dim_diag_s;
+    int dim_diag_s_1;
+    int dim_diag_s_2;
     int dim_eta;
     int dim_eta_h_step;
     int dim_eta_l_step;
@@ -79,6 +106,9 @@ public:
     int dim_I0;
     int dim_I0_1;
     int dim_I0_2;
+    int dim_incid;
+    int dim_incid_1;
+    int dim_incid_2;
     int dim_lambda;
     int dim_N;
     int dim_N_1;
@@ -152,6 +182,7 @@ public:
     int dim_n_vos_12;
     int dim_n_vos_2;
     int dim_n_vos_3;
+    int dim_n_x;
     int dim_n_xU;
     int dim_n_xU_1;
     int dim_n_xU_2;
@@ -198,18 +229,27 @@ public:
     int dim_S0;
     int dim_S0_1;
     int dim_S0_2;
+    int dim_screened;
+    int dim_screened_1;
+    int dim_screened_2;
     int dim_T;
     int dim_T_1;
     int dim_T_2;
     int dim_T0;
     int dim_T0_1;
     int dim_T0_2;
+    int dim_treated;
+    int dim_treated_1;
+    int dim_treated_2;
     int dim_U;
     int dim_U_1;
     int dim_U_2;
     int dim_U0;
     int dim_U0_1;
     int dim_U0_2;
+    int dim_vaccinated;
+    int dim_vaccinated_1;
+    int dim_vaccinated_2;
     int dim_vax_step;
     int dim_vbe;
     int dim_vbe_1;
@@ -264,6 +304,7 @@ public:
     std::vector<real_t> eta_h_step;
     std::vector<real_t> eta_l_step;
     real_t exr;
+    real_t fix_N;
     std::vector<real_t> I0;
     std::vector<real_t> initial_A;
     real_t initial_beta;
@@ -273,18 +314,24 @@ public:
     std::vector<real_t> initial_cum_screened;
     std::vector<real_t> initial_cum_treated;
     std::vector<real_t> initial_cum_vaccinated;
+    std::vector<real_t> initial_diag_a;
+    std::vector<real_t> initial_diag_s;
     real_t initial_entrants;
     std::vector<real_t> initial_eta;
     std::vector<real_t> initial_I;
+    std::vector<real_t> initial_incid;
     std::vector<real_t> initial_lambda;
     real_t initial_leavers;
     std::vector<real_t> initial_N;
     std::vector<real_t> initial_S;
+    std::vector<real_t> initial_screened;
     std::vector<real_t> initial_T;
     real_t initial_time;
     real_t initial_tot_attended;
     real_t initial_tot_treated;
+    std::vector<real_t> initial_treated;
     std::vector<real_t> initial_U;
+    std::vector<real_t> initial_vaccinated;
     real_t mu;
     int n_group;
     int n_vax;
@@ -296,12 +343,18 @@ public:
     int offset_variable_cum_screened;
     int offset_variable_cum_treated;
     int offset_variable_cum_vaccinated;
+    int offset_variable_diag_a;
+    int offset_variable_diag_s;
     int offset_variable_I;
+    int offset_variable_incid;
     int offset_variable_lambda;
     int offset_variable_N;
     int offset_variable_S;
+    int offset_variable_screened;
     int offset_variable_T;
+    int offset_variable_treated;
     int offset_variable_U;
+    int offset_variable_vaccinated;
     std::vector<real_t> p;
     real_t psi;
     std::vector<real_t> q;
@@ -314,6 +367,7 @@ public:
     real_t rho;
     std::vector<real_t> S0;
     real_t sigma;
+    real_t steps_per_year;
     std::vector<real_t> T0;
     std::vector<real_t> U0;
     std::vector<real_t> vax_step;
@@ -350,6 +404,7 @@ public:
     std::vector<real_t> n_vbe;
     std::vector<real_t> n_vod;
     std::vector<real_t> n_vos;
+    std::vector<real_t> n_x;
     std::vector<real_t> n_xU;
     std::vector<real_t> Np;
     std::vector<real_t> prop_C;
@@ -368,10 +423,10 @@ public:
     shared(pars.shared), internal(pars.internal) {
   }
   size_t size() {
-    return shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_N + shared->dim_S + shared->dim_T + shared->dim_U + 6;
+    return shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_diag_a + shared->dim_diag_s + shared->dim_eta + shared->dim_I + shared->dim_incid + shared->dim_lambda + shared->dim_N + shared->dim_S + shared->dim_screened + shared->dim_T + shared->dim_treated + shared->dim_U + shared->dim_vaccinated + 6;
   }
   std::vector<real_t> initial(size_t step) {
-    std::vector<real_t> state(shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_N + shared->dim_S + shared->dim_T + shared->dim_U + 6);
+    std::vector<real_t> state(shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_diag_a + shared->dim_diag_s + shared->dim_eta + shared->dim_I + shared->dim_incid + shared->dim_lambda + shared->dim_N + shared->dim_S + shared->dim_screened + shared->dim_T + shared->dim_treated + shared->dim_U + shared->dim_vaccinated + 6);
     state[0] = shared->initial_time;
     state[1] = shared->initial_tot_treated;
     state[2] = shared->initial_tot_attended;
@@ -391,6 +446,12 @@ public:
     std::copy(shared->initial_cum_treated.begin(), shared->initial_cum_treated.end(), state.begin() + shared->offset_variable_cum_treated);
     std::copy(shared->initial_cum_screened.begin(), shared->initial_cum_screened.end(), state.begin() + shared->offset_variable_cum_screened);
     std::copy(shared->initial_cum_vaccinated.begin(), shared->initial_cum_vaccinated.end(), state.begin() + shared->offset_variable_cum_vaccinated);
+    std::copy(shared->initial_incid.begin(), shared->initial_incid.end(), state.begin() + shared->offset_variable_incid);
+    std::copy(shared->initial_diag_a.begin(), shared->initial_diag_a.end(), state.begin() + shared->offset_variable_diag_a);
+    std::copy(shared->initial_diag_s.begin(), shared->initial_diag_s.end(), state.begin() + shared->offset_variable_diag_s);
+    std::copy(shared->initial_treated.begin(), shared->initial_treated.end(), state.begin() + shared->offset_variable_treated);
+    std::copy(shared->initial_screened.begin(), shared->initial_screened.end(), state.begin() + shared->offset_variable_screened);
+    std::copy(shared->initial_vaccinated.begin(), shared->initial_vaccinated.end(), state.begin() + shared->offset_variable_vaccinated);
     std::copy(shared->initial_N.begin(), shared->initial_N.end(), state.begin() + shared->offset_variable_N);
     return state;
   }
@@ -410,9 +471,17 @@ public:
     const real_t * cum_treated = state + shared->offset_variable_cum_treated;
     const real_t * cum_screened = state + shared->offset_variable_cum_screened;
     const real_t * cum_vaccinated = state + shared->offset_variable_cum_vaccinated;
-    state_next[0] = (step + 1) * shared->dt;
-    state_next[2] = odin_sum1<real_t>(cum_treated, 0, shared->dim_cum_treated) + odin_sum1<real_t>(cum_screened, 0, shared->dim_cum_screened);
-    state_next[1] = odin_sum1<real_t>(cum_treated, 0, shared->dim_cum_treated);
+    const real_t * incid = state + shared->offset_variable_incid;
+    const real_t * diag_a = state + shared->offset_variable_diag_a;
+    const real_t * diag_s = state + shared->offset_variable_diag_s;
+    const real_t * treated = state + shared->offset_variable_treated;
+    const real_t * screened = state + shared->offset_variable_screened;
+    const real_t * vaccinated = state + shared->offset_variable_vaccinated;
+    const real_t tot_treated = state[1];
+    const real_t entrants = state[3];
+    const real_t leavers = state[4];
+    state_next[2] = tot_treated + odin_sum1<real_t>(screened, 0, shared->dim_screened);
+    state_next[1] = odin_sum1<real_t>(treated, 0, shared->dim_treated);
     state_next[5] = (static_cast<int>(step) >= shared->dim_beta_step ? shared->beta_step[shared->dim_beta_step - 1] : shared->beta_step[step + 1 - 1]);
     {
        int i = 1;
@@ -422,6 +491,7 @@ public:
        int i = 2;
        state_next[6 + i - 1] = (static_cast<int>(step) >= shared->dim_eta_h_step ? shared->eta_h_step[shared->dim_eta_h_step - 1] : shared->eta_h_step[step + 1 - 1]);
     }
+    state_next[0] = (step + 1) * shared->dt;
     real_t vax_switch = (static_cast<int>(step) >= shared->dim_vax_step ? shared->vax_step[shared->dim_vax_step - 1] : shared->vax_step[step + 1 - 1]);
     for (int i = 1; i <= shared->dim_Np; ++i) {
       internal.Np[i - 1] = odin_sum2<real_t>(N, i - 1, i, 0, shared->dim_N_2, shared->dim_N_1) * shared->p[i - 1];
@@ -435,10 +505,6 @@ public:
       for (int j = 1; j <= shared->dim_C_2; ++j) {
         internal.C[i - 1 + shared->dim_C_1 * (j - 1)] = (1 - shared->vei[j - 1]) * (I[shared->dim_I_1 * (j - 1) + i - 1] + A[shared->dim_A_1 * (j - 1) + i - 1] + S[shared->dim_S_1 * (j - 1) + i - 1]);
       }
-    }
-    for (int i = 1; i <= shared->dim_n_xU_1; ++i) {
-      int j = 1;
-      internal.n_xU[i - 1 + shared->dim_n_xU_1 * (j - 1)] = dust::distr::rpois(rng_state, shared->enr * shared->q[i - 1] * shared->dt);
     }
     for (int i = 1; i <= shared->dim_r_AT_1; ++i) {
       for (int j = 1; j <= shared->dim_r_AT_2; ++j) {
@@ -460,13 +526,6 @@ public:
         internal.n_I[i - 1 + shared->dim_n_I_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(I[shared->dim_I_1 * (j - 1) + i - 1]), 1 - std::exp(- shared->r_I[shared->dim_r_I_1 * (j - 1) + i - 1] * shared->dt));
       }
     }
-    for (int i = 1; i <= shared->dim_n_vbe_1; ++i) {
-      for (int j = 1; j <= shared->dim_n_vbe_2; ++j) {
-        for (int k = 1; k <= shared->dim_n_vbe_3; ++k) {
-          internal.n_vbe[i - 1 + shared->dim_n_vbe_1 * (j - 1) + shared->dim_n_vbe_12 * (k - 1)] = dust::distr::rbinom(rng_state, std::round(internal.n_xU[shared->dim_n_xU_1 * (k - 1) + i - 1]), shared->vbe[shared->dim_vbe_12 * (k - 1) + shared->dim_vbe_1 * (j - 1) + i - 1]);
-        }
-      }
-    }
     for (int i = 1; i <= shared->dim_prop_C; ++i) {
       internal.prop_C[i - 1] = odin_sum2<real_t>(internal.C.data(), i - 1, i, 0, shared->dim_C_2, shared->dim_C_1) / (real_t) odin_sum2<real_t>(N, i - 1, i, 0, shared->dim_N_2, shared->dim_N_1);
     }
@@ -480,7 +539,6 @@ public:
         internal.r_U[i - 1 + shared->dim_r_U_1 * (j - 1)] = internal.r_UI[shared->dim_r_UI_1 * (j - 1) + i - 1] + internal.r_UU[shared->dim_r_UU_1 * (j - 1) + i - 1] + shared->exr;
       }
     }
-    state_next[3] = odin_sum1<real_t>(internal.n_xU.data(), 0, shared->dim_n_xU);
     for (int i = 1; i <= shared->dim_foi_LH; ++i) {
       internal.foi_LH[i - 1] = internal.prop_C[i - 1] * internal.Np[i - 1] / (real_t) odin_sum1<real_t>(internal.Np.data(), 0, shared->dim_Np);
     }
@@ -590,7 +648,9 @@ public:
         internal.n_UI[i - 1 + shared->dim_n_UI_1 * (j - 1)] = dust::distr::rbinom(rng_state, std::round(internal.n_U[shared->dim_n_U_1 * (j - 1) + i - 1] - internal.n_Ux[shared->dim_n_Ux_1 * (j - 1) + i - 1]), internal.r_UI[shared->dim_r_UI_1 * (j - 1) + i - 1] / (real_t) (internal.r_UI[shared->dim_r_UI_1 * (j - 1) + i - 1] + internal.r_UU[shared->dim_r_UU_1 * (j - 1) + i - 1]));
       }
     }
-    state_next[4] = odin_sum1<real_t>(internal.n_Ux.data(), 0, shared->dim_n_Ux) + odin_sum1<real_t>(internal.n_Ix.data(), 0, shared->dim_n_Ix) + odin_sum1<real_t>(internal.n_Ax.data(), 0, shared->dim_n_Ax) + odin_sum1<real_t>(internal.n_Sx.data(), 0, shared->dim_n_Sx) + odin_sum1<real_t>(internal.n_Tx.data(), 0, shared->dim_n_Tx);
+    for (int i = 1; i <= shared->dim_n_x; ++i) {
+      internal.n_x[i - 1] = odin_sum2<real_t>(internal.n_Ux.data(), i - 1, i, 0, shared->dim_n_Ux_2, shared->dim_n_Ux_1) + odin_sum2<real_t>(internal.n_Ix.data(), i - 1, i, 0, shared->dim_n_Ix_2, shared->dim_n_Ix_1) + odin_sum2<real_t>(internal.n_Ax.data(), i - 1, i, 0, shared->dim_n_Ax_2, shared->dim_n_Ax_1) + odin_sum2<real_t>(internal.n_Sx.data(), i - 1, i, 0, shared->dim_n_Sx_2, shared->dim_n_Sx_1) + odin_sum2<real_t>(internal.n_Tx.data(), i - 1, i, 0, shared->dim_n_Tx_2, shared->dim_n_Tx_1);
+    }
     for (int i = 1; i <= shared->dim_S_1; ++i) {
       for (int j = 1; j <= shared->dim_S_2; ++j) {
         state_next[shared->offset_variable_S + i - 1 + shared->dim_S_1 * (j - 1)] = S[shared->dim_S_1 * (j - 1) + i - 1] + internal.n_IS[shared->dim_n_IS_1 * (j - 1) + i - 1] - internal.n_S[shared->dim_n_S_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wS.data(), i - 1, i, j - 1, j, 0, shared->dim_wS_3, shared->dim_wS_1, shared->dim_wS_12);
@@ -612,6 +672,10 @@ public:
           internal.n_vod[i - 1 + shared->dim_n_vod_1 * (j - 1) + shared->dim_n_vod_12 * (k - 1)] = dust::distr::rbinom(rng_state, std::round(internal.n_TU[shared->dim_n_TU_1 * (k - 1) + i - 1]), shared->vod[shared->dim_vod_12 * (k - 1) + shared->dim_vod_1 * (j - 1) + i - 1] * vax_switch);
         }
       }
+    }
+    for (int i = 1; i <= shared->dim_n_xU_1; ++i) {
+      int j = 1;
+      internal.n_xU[i - 1 + shared->dim_n_xU_1 * (j - 1)] = (shared->fix_N == 0 ? dust::distr::rpois(rng_state, shared->enr * shared->q[i - 1] * shared->dt) : internal.n_x[i - 1]);
     }
     for (int i = 1; i <= shared->dim_A_1; ++i) {
       for (int j = 1; j <= shared->dim_A_2; ++j) {
@@ -638,20 +702,48 @@ public:
         state_next[shared->offset_variable_cum_treated + i - 1 + shared->dim_cum_treated_1 * (j - 1)] = cum_treated[shared->dim_cum_treated_1 * (j - 1) + i - 1] + internal.n_TU[shared->dim_n_TU_1 * (j - 1) + i - 1];
       }
     }
+    for (int i = 1; i <= shared->dim_diag_a_1; ++i) {
+      for (int j = 1; j <= shared->dim_diag_a_2; ++j) {
+        state_next[shared->offset_variable_diag_a + i - 1 + shared->dim_diag_a_1 * (j - 1)] = (fmodr<real_t>(step, shared->steps_per_year) == 0 ? internal.n_AT[shared->dim_n_AT_1 * (j - 1) + i - 1] : diag_a[shared->dim_diag_a_1 * (j - 1) + i - 1] + internal.n_AT[shared->dim_n_AT_1 * (j - 1) + i - 1]);
+      }
+    }
+    for (int i = 1; i <= shared->dim_diag_s_1; ++i) {
+      for (int j = 1; j <= shared->dim_diag_s_2; ++j) {
+        state_next[shared->offset_variable_diag_s + i - 1 + shared->dim_diag_s_1 * (j - 1)] = (fmodr<real_t>(step, shared->steps_per_year) == 0 ? internal.n_ST[shared->dim_n_ST_1 * (j - 1) + i - 1] : diag_s[shared->dim_diag_s_1 * (j - 1) + i - 1] + internal.n_ST[shared->dim_n_ST_1 * (j - 1) + i - 1]);
+      }
+    }
     for (int i = 1; i <= shared->dim_I_1; ++i) {
       for (int j = 1; j <= shared->dim_I_2; ++j) {
         state_next[shared->offset_variable_I + i - 1 + shared->dim_I_1 * (j - 1)] = I[shared->dim_I_1 * (j - 1) + i - 1] + internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1] - internal.n_I[shared->dim_n_I_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wI.data(), i - 1, i, j - 1, j, 0, shared->dim_wI_3, shared->dim_wI_1, shared->dim_wI_12);
       }
     }
+    for (int i = 1; i <= shared->dim_incid_1; ++i) {
+      for (int j = 1; j <= shared->dim_incid_2; ++j) {
+        state_next[shared->offset_variable_incid + i - 1 + shared->dim_incid_1 * (j - 1)] = (fmodr<real_t>(step, shared->steps_per_year) == 0 ? internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1] : incid[shared->dim_incid_1 * (j - 1) + i - 1] + internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1]);
+      }
+    }
+    state_next[4] = (fmodr<real_t>(step, shared->steps_per_year) == 0 ? odin_sum1<real_t>(internal.n_x.data(), 0, shared->dim_n_x) : leavers + odin_sum1<real_t>(internal.n_x.data(), 0, shared->dim_n_x));
     for (int i = 1; i <= shared->dim_T_1; ++i) {
       for (int j = 1; j <= shared->dim_T_2; ++j) {
         state_next[shared->offset_variable_T + i - 1 + shared->dim_T_1 * (j - 1)] = T[shared->dim_T_1 * (j - 1) + i - 1] + internal.n_ST[shared->dim_n_ST_1 * (j - 1) + i - 1] + internal.n_AT[shared->dim_n_AT_1 * (j - 1) + i - 1] - internal.n_T[shared->dim_n_T_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wT.data(), i - 1, i, j - 1, j, 0, shared->dim_wT_3, shared->dim_wT_1, shared->dim_wT_12);
+      }
+    }
+    for (int i = 1; i <= shared->dim_treated_1; ++i) {
+      for (int j = 1; j <= shared->dim_treated_2; ++j) {
+        state_next[shared->offset_variable_treated + i - 1 + shared->dim_treated_1 * (j - 1)] = (fmodr<real_t>(step, shared->steps_per_year) == 0 ? internal.n_TU[shared->dim_n_TU_1 * (j - 1) + i - 1] : treated[shared->dim_treated_1 * (j - 1) + i - 1] + internal.n_TU[shared->dim_n_TU_1 * (j - 1) + i - 1]);
       }
     }
     for (int i = 1; i <= shared->dim_wU_1; ++i) {
       for (int j = 1; j <= shared->dim_wU_2; ++j) {
         for (int k = 1; k <= shared->dim_wU_3; ++k) {
           internal.wU[i - 1 + shared->dim_wU_1 * (j - 1) + shared->dim_wU_12 * (k - 1)] = dust::distr::rbinom(rng_state, std::round(U[shared->dim_U_1 * (k - 1) + i - 1] - internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1] - internal.n_Ux[shared->dim_n_Ux_1 * (j - 1) + i - 1]), shared->w[shared->dim_w_1 * (k - 1) + j - 1]);
+        }
+      }
+    }
+    for (int i = 1; i <= shared->dim_n_vbe_1; ++i) {
+      for (int j = 1; j <= shared->dim_n_vbe_2; ++j) {
+        for (int k = 1; k <= shared->dim_n_vbe_3; ++k) {
+          internal.n_vbe[i - 1 + shared->dim_n_vbe_1 * (j - 1) + shared->dim_n_vbe_12 * (k - 1)] = dust::distr::rbinom(rng_state, std::round(internal.n_xU[shared->dim_n_xU_1 * (k - 1) + i - 1]), shared->vbe[shared->dim_vbe_12 * (k - 1) + shared->dim_vbe_1 * (j - 1) + i - 1]);
         }
       }
     }
@@ -667,6 +759,12 @@ public:
         state_next[shared->offset_variable_cum_screened + i - 1 + shared->dim_cum_screened_1 * (j - 1)] = cum_screened[shared->dim_cum_screened_1 * (j - 1) + i - 1] + internal.n_UU[shared->dim_n_UU_1 * (j - 1) + i - 1];
       }
     }
+    state_next[3] = (fmodr<real_t>(step, shared->steps_per_year) == 0 ? odin_sum1<real_t>(internal.n_xU.data(), 0, shared->dim_n_xU) : entrants + odin_sum1<real_t>(internal.n_xU.data(), 0, shared->dim_n_xU));
+    for (int i = 1; i <= shared->dim_screened_1; ++i) {
+      for (int j = 1; j <= shared->dim_screened_2; ++j) {
+        state_next[shared->offset_variable_screened + i - 1 + shared->dim_screened_1 * (j - 1)] = (fmodr<real_t>(step, shared->steps_per_year) == 0 ? internal.n_UU[shared->dim_n_UU_1 * (j - 1) + i - 1] : screened[shared->dim_screened_1 * (j - 1) + i - 1] + internal.n_UU[shared->dim_n_UU_1 * (j - 1) + i - 1]);
+      }
+    }
     for (int i = 1; i <= shared->dim_cum_vaccinated_1; ++i) {
       for (int j = 1; j <= shared->dim_cum_vaccinated_2; ++j) {
         state_next[shared->offset_variable_cum_vaccinated + i - 1 + shared->dim_cum_vaccinated_1 * (j - 1)] = cum_vaccinated[shared->dim_cum_vaccinated_1 * (j - 1) + i - 1] + internal.n_vos[shared->dim_n_vos_12 * (j - 1) + shared->dim_n_vos_1 * (j - 1) + i - 1] + internal.n_vod[shared->dim_n_vod_12 * (j - 1) + shared->dim_n_vod_1 * (j - 1) + i - 1] + internal.n_vbe[shared->dim_n_vbe_12 * (j - 1) + shared->dim_n_vbe_1 * (j - 1) + i - 1];
@@ -675,6 +773,11 @@ public:
     for (int i = 1; i <= shared->dim_U_1; ++i) {
       for (int j = 1; j <= shared->dim_U_2; ++j) {
         state_next[shared->offset_variable_U + i - 1 + shared->dim_U_1 * (j - 1)] = U[shared->dim_U_1 * (j - 1) + i - 1] + internal.n_xU[shared->dim_n_xU_1 * (j - 1) + i - 1] - internal.n_UI[shared->dim_n_UI_1 * (j - 1) + i - 1] - internal.n_Ux[shared->dim_n_Ux_1 * (j - 1) + i - 1] + internal.n_AU[shared->dim_n_AU_1 * (j - 1) + i - 1] + internal.n_TU[shared->dim_n_TU_1 * (j - 1) + i - 1] + odin_sum3<real_t>(internal.wU.data(), i - 1, i, j - 1, j, 0, shared->dim_wU_3, shared->dim_wU_1, shared->dim_wU_12) - odin_sum3<real_t>(internal.n_vbe.data(), i - 1, i, j - 1, j, 0, shared->dim_n_vbe_3, shared->dim_n_vbe_1, shared->dim_n_vbe_12) - odin_sum3<real_t>(internal.n_vod.data(), i - 1, i, j - 1, j, 0, shared->dim_n_vod_3, shared->dim_n_vod_1, shared->dim_n_vod_12) - odin_sum3<real_t>(internal.n_vos.data(), i - 1, i, j - 1, j, 0, shared->dim_n_vos_3, shared->dim_n_vos_1, shared->dim_n_vos_12);
+      }
+    }
+    for (int i = 1; i <= shared->dim_vaccinated_1; ++i) {
+      for (int j = 1; j <= shared->dim_vaccinated_2; ++j) {
+        state_next[shared->offset_variable_vaccinated + i - 1 + shared->dim_vaccinated_1 * (j - 1)] = (fmodr<real_t>(step, shared->steps_per_year) == 0 ? internal.n_vos[shared->dim_n_vos_12 * (j - 1) + shared->dim_n_vos_1 * (j - 1) + i - 1] + internal.n_vod[shared->dim_n_vod_12 * (j - 1) + shared->dim_n_vod_1 * (j - 1) + i - 1] + internal.n_vbe[shared->dim_n_vbe_12 * (j - 1) + shared->dim_n_vbe_1 * (j - 1) + i - 1] : vaccinated[shared->dim_vaccinated_1 * (j - 1) + i - 1] + internal.n_vos[shared->dim_n_vos_12 * (j - 1) + shared->dim_n_vos_1 * (j - 1) + i - 1] + internal.n_vod[shared->dim_n_vod_12 * (j - 1) + shared->dim_n_vod_1 * (j - 1) + i - 1] + internal.n_vbe[shared->dim_n_vbe_12 * (j - 1) + shared->dim_n_vbe_1 * (j - 1) + i - 1]);
       }
     }
   }
@@ -926,7 +1029,6 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   typedef typename model::real_t real_t;
   auto shared = std::make_shared<model::shared_t>();
   model::internal_t internal;
-  shared->dt = 1 / (real_t) 365;
   shared->initial_beta = 0;
   shared->initial_entrants = 0;
   shared->initial_leavers = 0;
@@ -934,16 +1036,20 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   shared->initial_tot_attended = 0;
   shared->initial_tot_treated = 0;
   shared->n_group = 2;
+  shared->steps_per_year = 365;
   shared->dim_eta = shared->n_group;
   shared->dim_foi_LH = shared->n_group;
   shared->dim_lambda = shared->n_group;
+  shared->dim_n_x = shared->n_group;
   shared->dim_Np = shared->n_group;
   shared->dim_p = shared->n_group;
   shared->dim_prop_C = shared->n_group;
   shared->dim_q = shared->n_group;
+  shared->dt = 1 / (real_t) shared->steps_per_year;
   internal.foi_LH = std::vector<real_t>(shared->dim_foi_LH);
   shared->initial_eta = std::vector<real_t>(shared->dim_eta);
   shared->initial_lambda = std::vector<real_t>(shared->dim_lambda);
+  internal.n_x = std::vector<real_t>(shared->dim_n_x);
   internal.Np = std::vector<real_t>(shared->dim_Np);
   internal.prop_C = std::vector<real_t>(shared->dim_prop_C);
   for (int i = 1; i <= shared->dim_eta; ++i) {
@@ -957,6 +1063,7 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   shared->enr = NA_REAL;
   shared->epsilon = NA_REAL;
   shared->exr = NA_REAL;
+  shared->fix_N = NA_REAL;
   shared->mu = NA_REAL;
   shared->nu = NA_REAL;
   shared->psi = NA_REAL;
@@ -975,6 +1082,7 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   shared->eta_l_step = user_get_array_variable<real_t, 1>(user, "eta_l_step", shared->eta_l_step, dim_eta_l_step, NA_REAL, NA_REAL);
   shared->dim_eta_l_step = shared->eta_l_step.size();
   shared->exr = user_get_scalar<real_t>(user, "exr", shared->exr, NA_REAL, NA_REAL);
+  shared->fix_N = user_get_scalar<real_t>(user, "fix_N", shared->fix_N, NA_REAL, NA_REAL);
   shared->mu = user_get_scalar<real_t>(user, "mu", shared->mu, NA_REAL, NA_REAL);
   shared->n_vax = user_get_scalar<int>(user, "n_vax", shared->n_vax, NA_REAL, NA_REAL);
   shared->nu = user_get_scalar<real_t>(user, "nu", shared->nu, NA_REAL, NA_REAL);
@@ -1002,10 +1110,16 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   shared->dim_cum_treated_2 = shared->n_vax;
   shared->dim_cum_vaccinated_1 = shared->n_group;
   shared->dim_cum_vaccinated_2 = shared->n_vax;
+  shared->dim_diag_a_1 = shared->n_group;
+  shared->dim_diag_a_2 = shared->n_vax;
+  shared->dim_diag_s_1 = shared->n_group;
+  shared->dim_diag_s_2 = shared->n_vax;
   shared->dim_I_1 = shared->n_group;
   shared->dim_I_2 = shared->n_vax;
   shared->dim_I0_1 = shared->n_group;
   shared->dim_I0_2 = shared->n_vax;
+  shared->dim_incid_1 = shared->n_group;
+  shared->dim_incid_2 = shared->n_vax;
   shared->dim_N_1 = shared->n_group;
   shared->dim_N_2 = shared->n_vax;
   shared->dim_n_A_1 = shared->n_group;
@@ -1081,14 +1195,20 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   shared->dim_S_2 = shared->n_vax;
   shared->dim_S0_1 = shared->n_group;
   shared->dim_S0_2 = shared->n_vax;
+  shared->dim_screened_1 = shared->n_group;
+  shared->dim_screened_2 = shared->n_vax;
   shared->dim_T_1 = shared->n_group;
   shared->dim_T_2 = shared->n_vax;
   shared->dim_T0_1 = shared->n_group;
   shared->dim_T0_2 = shared->n_vax;
+  shared->dim_treated_1 = shared->n_group;
+  shared->dim_treated_2 = shared->n_vax;
   shared->dim_U_1 = shared->n_group;
   shared->dim_U_2 = shared->n_vax;
   shared->dim_U0_1 = shared->n_group;
   shared->dim_U0_2 = shared->n_vax;
+  shared->dim_vaccinated_1 = shared->n_group;
+  shared->dim_vaccinated_2 = shared->n_vax;
   shared->dim_vbe_1 = shared->n_group;
   shared->dim_vbe_2 = shared->n_vax;
   shared->dim_vbe_3 = shared->n_vax;
@@ -1128,8 +1248,11 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   shared->dim_cum_screened = shared->dim_cum_screened_1 * shared->dim_cum_screened_2;
   shared->dim_cum_treated = shared->dim_cum_treated_1 * shared->dim_cum_treated_2;
   shared->dim_cum_vaccinated = shared->dim_cum_vaccinated_1 * shared->dim_cum_vaccinated_2;
+  shared->dim_diag_a = shared->dim_diag_a_1 * shared->dim_diag_a_2;
+  shared->dim_diag_s = shared->dim_diag_s_1 * shared->dim_diag_s_2;
   shared->dim_I = shared->dim_I_1 * shared->dim_I_2;
   shared->dim_I0 = shared->dim_I0_1 * shared->dim_I0_2;
+  shared->dim_incid = shared->dim_incid_1 * shared->dim_incid_2;
   shared->dim_N = shared->dim_N_1 * shared->dim_N_2;
   shared->dim_n_A = shared->dim_n_A_1 * shared->dim_n_A_2;
   shared->dim_n_AT = shared->dim_n_AT_1 * shared->dim_n_AT_2;
@@ -1169,10 +1292,13 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   shared->dim_r_UU = shared->dim_r_UU_1 * shared->dim_r_UU_2;
   shared->dim_S = shared->dim_S_1 * shared->dim_S_2;
   shared->dim_S0 = shared->dim_S0_1 * shared->dim_S0_2;
+  shared->dim_screened = shared->dim_screened_1 * shared->dim_screened_2;
   shared->dim_T = shared->dim_T_1 * shared->dim_T_2;
   shared->dim_T0 = shared->dim_T0_1 * shared->dim_T0_2;
+  shared->dim_treated = shared->dim_treated_1 * shared->dim_treated_2;
   shared->dim_U = shared->dim_U_1 * shared->dim_U_2;
   shared->dim_U0 = shared->dim_U0_1 * shared->dim_U0_2;
+  shared->dim_vaccinated = shared->dim_vaccinated_1 * shared->dim_vaccinated_2;
   shared->dim_vbe = shared->dim_vbe_1 * shared->dim_vbe_2 * shared->dim_vbe_3;
   shared->dim_vbe_12 = shared->dim_vbe_1 * shared->dim_vbe_2;
   shared->dim_vod = shared->dim_vod_1 * shared->dim_vod_2 * shared->dim_vod_3;
@@ -1205,11 +1331,17 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   shared->initial_cum_screened = std::vector<real_t>(shared->dim_cum_screened);
   shared->initial_cum_treated = std::vector<real_t>(shared->dim_cum_treated);
   shared->initial_cum_vaccinated = std::vector<real_t>(shared->dim_cum_vaccinated);
+  shared->initial_diag_a = std::vector<real_t>(shared->dim_diag_a);
+  shared->initial_diag_s = std::vector<real_t>(shared->dim_diag_s);
   shared->initial_I = std::vector<real_t>(shared->dim_I);
+  shared->initial_incid = std::vector<real_t>(shared->dim_incid);
   shared->initial_N = std::vector<real_t>(shared->dim_N);
   shared->initial_S = std::vector<real_t>(shared->dim_S);
+  shared->initial_screened = std::vector<real_t>(shared->dim_screened);
   shared->initial_T = std::vector<real_t>(shared->dim_T);
+  shared->initial_treated = std::vector<real_t>(shared->dim_treated);
   shared->initial_U = std::vector<real_t>(shared->dim_U);
+  shared->initial_vaccinated = std::vector<real_t>(shared->dim_vaccinated);
   internal.n_A = std::vector<real_t>(shared->dim_n_A);
   internal.n_AT = std::vector<real_t>(shared->dim_n_AT);
   internal.n_AU = std::vector<real_t>(shared->dim_n_AU);
@@ -1279,6 +1411,36 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
       shared->initial_cum_vaccinated[i - 1 + shared->dim_cum_vaccinated_1 * (j - 1)] = 0;
     }
   }
+  for (int i = 1; i <= shared->dim_diag_a_1; ++i) {
+    for (int j = 1; j <= shared->dim_diag_a_2; ++j) {
+      shared->initial_diag_a[i - 1 + shared->dim_diag_a_1 * (j - 1)] = 0;
+    }
+  }
+  for (int i = 1; i <= shared->dim_diag_s_1; ++i) {
+    for (int j = 1; j <= shared->dim_diag_s_2; ++j) {
+      shared->initial_diag_s[i - 1 + shared->dim_diag_s_1 * (j - 1)] = 0;
+    }
+  }
+  for (int i = 1; i <= shared->dim_incid_1; ++i) {
+    for (int j = 1; j <= shared->dim_incid_2; ++j) {
+      shared->initial_incid[i - 1 + shared->dim_incid_1 * (j - 1)] = 0;
+    }
+  }
+  for (int i = 1; i <= shared->dim_screened_1; ++i) {
+    for (int j = 1; j <= shared->dim_screened_2; ++j) {
+      shared->initial_screened[i - 1 + shared->dim_screened_1 * (j - 1)] = 0;
+    }
+  }
+  for (int i = 1; i <= shared->dim_treated_1; ++i) {
+    for (int j = 1; j <= shared->dim_treated_2; ++j) {
+      shared->initial_treated[i - 1 + shared->dim_treated_1 * (j - 1)] = 0;
+    }
+  }
+  for (int i = 1; i <= shared->dim_vaccinated_1; ++i) {
+    for (int j = 1; j <= shared->dim_vaccinated_2; ++j) {
+      shared->initial_vaccinated[i - 1 + shared->dim_vaccinated_1 * (j - 1)] = 0;
+    }
+  }
   shared->offset_variable_A = shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_U + 6;
   shared->offset_variable_cum_diag_a = shared->dim_A + shared->dim_cum_incid + shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_S + shared->dim_T + shared->dim_U + 6;
   shared->offset_variable_cum_diag_s = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_incid + shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_S + shared->dim_T + shared->dim_U + 6;
@@ -1286,10 +1448,16 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   shared->offset_variable_cum_screened = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_treated + shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_S + shared->dim_T + shared->dim_U + 6;
   shared->offset_variable_cum_treated = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_S + shared->dim_T + shared->dim_U + 6;
   shared->offset_variable_cum_vaccinated = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_S + shared->dim_T + shared->dim_U + 6;
+  shared->offset_variable_diag_a = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_eta + shared->dim_I + shared->dim_incid + shared->dim_lambda + shared->dim_S + shared->dim_T + shared->dim_U + 6;
+  shared->offset_variable_diag_s = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_diag_a + shared->dim_eta + shared->dim_I + shared->dim_incid + shared->dim_lambda + shared->dim_S + shared->dim_T + shared->dim_U + 6;
   shared->offset_variable_I = shared->dim_eta + shared->dim_lambda + shared->dim_U + 6;
-  shared->offset_variable_N = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_S + shared->dim_T + shared->dim_U + 6;
+  shared->offset_variable_incid = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_S + shared->dim_T + shared->dim_U + 6;
+  shared->offset_variable_N = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_diag_a + shared->dim_diag_s + shared->dim_eta + shared->dim_I + shared->dim_incid + shared->dim_lambda + shared->dim_S + shared->dim_screened + shared->dim_T + shared->dim_treated + shared->dim_U + shared->dim_vaccinated + 6;
   shared->offset_variable_S = shared->dim_A + shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_U + 6;
+  shared->offset_variable_screened = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_diag_a + shared->dim_diag_s + shared->dim_eta + shared->dim_I + shared->dim_incid + shared->dim_lambda + shared->dim_S + shared->dim_T + shared->dim_treated + shared->dim_U + 6;
   shared->offset_variable_T = shared->dim_A + shared->dim_eta + shared->dim_I + shared->dim_lambda + shared->dim_S + shared->dim_U + 6;
+  shared->offset_variable_treated = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_diag_a + shared->dim_diag_s + shared->dim_eta + shared->dim_I + shared->dim_incid + shared->dim_lambda + shared->dim_S + shared->dim_T + shared->dim_U + 6;
+  shared->offset_variable_vaccinated = shared->dim_A + shared->dim_cum_diag_a + shared->dim_cum_diag_s + shared->dim_cum_incid + shared->dim_cum_screened + shared->dim_cum_treated + shared->dim_cum_vaccinated + shared->dim_diag_a + shared->dim_diag_s + shared->dim_eta + shared->dim_I + shared->dim_incid + shared->dim_lambda + shared->dim_S + shared->dim_screened + shared->dim_T + shared->dim_treated + shared->dim_U + 6;
   shared->S0 = user_get_array_fixed<real_t, 2>(user, "S0", shared->S0, {shared->dim_S0_1, shared->dim_S0_2}, NA_REAL, NA_REAL);
   shared->T0 = user_get_array_fixed<real_t, 2>(user, "T0", shared->T0, {shared->dim_T0_1, shared->dim_T0_2}, NA_REAL, NA_REAL);
   shared->U0 = user_get_array_fixed<real_t, 2>(user, "U0", shared->U0, {shared->dim_U0_1, shared->dim_U0_2}, NA_REAL, NA_REAL);
@@ -1363,8 +1531,8 @@ template <>
 cpp11::sexp dust_info<model>(const dust::pars_t<model>& pars) {
   const model::internal_t internal = pars.internal;
   const std::shared_ptr<const model::shared_t> shared = pars.shared;
-  cpp11::writable::strings nms({"time", "tot_treated", "tot_attended", "entrants", "leavers", "beta", "eta", "lambda", "U", "I", "A", "S", "T", "cum_incid", "cum_diag_a", "cum_diag_s", "cum_treated", "cum_screened", "cum_vaccinated", "N"});
-  cpp11::writable::list dim(20);
+  cpp11::writable::strings nms({"time", "tot_treated", "tot_attended", "entrants", "leavers", "beta", "eta", "lambda", "U", "I", "A", "S", "T", "cum_incid", "cum_diag_a", "cum_diag_s", "cum_treated", "cum_screened", "cum_vaccinated", "incid", "diag_a", "diag_s", "treated", "screened", "vaccinated", "N"});
+  cpp11::writable::list dim(26);
   dim[0] = cpp11::writable::integers({1});
   dim[1] = cpp11::writable::integers({1});
   dim[2] = cpp11::writable::integers({1});
@@ -1384,9 +1552,15 @@ cpp11::sexp dust_info<model>(const dust::pars_t<model>& pars) {
   dim[16] = cpp11::writable::integers({shared->dim_cum_treated_1, shared->dim_cum_treated_2});
   dim[17] = cpp11::writable::integers({shared->dim_cum_screened_1, shared->dim_cum_screened_2});
   dim[18] = cpp11::writable::integers({shared->dim_cum_vaccinated_1, shared->dim_cum_vaccinated_2});
-  dim[19] = cpp11::writable::integers({shared->dim_N_1, shared->dim_N_2});
+  dim[19] = cpp11::writable::integers({shared->dim_incid_1, shared->dim_incid_2});
+  dim[20] = cpp11::writable::integers({shared->dim_diag_a_1, shared->dim_diag_a_2});
+  dim[21] = cpp11::writable::integers({shared->dim_diag_s_1, shared->dim_diag_s_2});
+  dim[22] = cpp11::writable::integers({shared->dim_treated_1, shared->dim_treated_2});
+  dim[23] = cpp11::writable::integers({shared->dim_screened_1, shared->dim_screened_2});
+  dim[24] = cpp11::writable::integers({shared->dim_vaccinated_1, shared->dim_vaccinated_2});
+  dim[25] = cpp11::writable::integers({shared->dim_N_1, shared->dim_N_2});
   dim.names() = nms;
-  cpp11::writable::list index(20);
+  cpp11::writable::list index(26);
   index[0] = cpp11::writable::integers({1});
   index[1] = cpp11::writable::integers({2});
   index[2] = cpp11::writable::integers({3});
@@ -1406,7 +1580,13 @@ cpp11::sexp dust_info<model>(const dust::pars_t<model>& pars) {
   index[16] = integer_sequence(shared->offset_variable_cum_treated + 1, shared->dim_cum_treated);
   index[17] = integer_sequence(shared->offset_variable_cum_screened + 1, shared->dim_cum_screened);
   index[18] = integer_sequence(shared->offset_variable_cum_vaccinated + 1, shared->dim_cum_vaccinated);
-  index[19] = integer_sequence(shared->offset_variable_N + 1, shared->dim_N);
+  index[19] = integer_sequence(shared->offset_variable_incid + 1, shared->dim_incid);
+  index[20] = integer_sequence(shared->offset_variable_diag_a + 1, shared->dim_diag_a);
+  index[21] = integer_sequence(shared->offset_variable_diag_s + 1, shared->dim_diag_s);
+  index[22] = integer_sequence(shared->offset_variable_treated + 1, shared->dim_treated);
+  index[23] = integer_sequence(shared->offset_variable_screened + 1, shared->dim_screened);
+  index[24] = integer_sequence(shared->offset_variable_vaccinated + 1, shared->dim_vaccinated);
+  index[25] = integer_sequence(shared->offset_variable_N + 1, shared->dim_N);
   index.names() = nms;
   size_t len = shared->offset_variable_N + shared->dim_N;
   using namespace cpp11::literals;

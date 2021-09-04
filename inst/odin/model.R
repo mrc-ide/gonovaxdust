@@ -12,7 +12,8 @@ n_vax   <- user(1)
 
 ## calibrate time-varying parameters
 # tt runs from t0 = 2009, to t10 = 2019
-dt <- 1 / 365
+steps_per_year <- 365
+dt <- 1 / steps_per_year
 initial(time) <- 0
 update(time) <- (step + 1) * dt
 
@@ -42,7 +43,12 @@ update(T[, ]) <- T[i, j] + n_ST[i, j] + n_AT[i, j] - n_T[i, j] + sum(wT[i, j, ])
 ## Update population size
 update(N[, ]) <- U[i, j] + I[i, j] + A[i, j] + S[i, j] + T[i, j]
 
-n_xU[, 1] <- rpois(enr * q[i] * dt)
+n_x[] <- sum(n_Ux[i, ]) + sum(n_Ix[i, ]) + sum(n_Ax[i, ]) + sum(n_Sx[i, ]) +
+  sum(n_Tx[i, ])
+
+n_xU[, 1] <- if (fix_N == 0)
+  rpois(enr * q[i] * dt) else
+    n_x[i]
 
 # calculate mixing matrix, probability of infection and force of infection
 C[, ] <- (1 - vei[j]) * (I[i, j] + A[i, j] + S[i, j])
@@ -95,7 +101,9 @@ n_TU[, ] <- n_T[i, j] - n_Tx[i, j]
 # Vaccination
 ## time-varying switch
 vax_switch <- if (as.integer(step) >= length(vax_step))
-  vax_step[length(vax_step)] else vax_step[step + 1]
+  vax_step[length(vax_step)] else
+    vax_step[step + 1]
+
 ## at screening
 n_vos[, , ] <- rbinom(n_UU[i, k], vos[i, j, k] * vax_switch)
 ## on diagnosis
@@ -119,12 +127,34 @@ update(cum_screened[, ]) <- cum_screened[i, j] + n_UU[i, j]
 update(cum_vaccinated[, ]) <-
   cum_vaccinated[i, j] + n_vos[i, j, j] + n_vod[i, j, j] + n_vbe[i, j, j]
 
-# aggregated time series for fitting mcmc
-update(tot_treated) <- sum(cum_treated)
-update(tot_attended) <- sum(cum_treated) + sum(cum_screened)
-update(entrants) <- sum(n_xU)
-update(leavers) <- sum(n_Ux) + sum(n_Ix) + sum(n_Ax) + sum(n_Sx) + sum(n_Tx)
+update(incid[, ]) <- if (step %% steps_per_year == 0)
+  n_UI[i, j] else
+    incid[i, j] + n_UI[i, j]
+update(diag_a[, ]) <- if (step %% steps_per_year == 0)
+  n_AT[i, j] else
+    diag_a[i, j] + n_AT[i, j]
+update(diag_s[, ]) <- if (step %% steps_per_year == 0)
+  n_ST[i, j] else
+    diag_s[i, j] + n_ST[i, j]
+update(treated[, ]) <- if (step %% steps_per_year == 0)
+  n_TU[i, j] else
+    treated[i, j] + n_TU[i, j]
+update(screened[, ]) <- if (step %% steps_per_year == 0)
+  n_UU[i, j] else
+    screened[i, j] + n_UU[i, j]
+update(vaccinated[, ]) <- if (step %% steps_per_year == 0)
+  n_vos[i, j, j] + n_vod[i, j, j] + n_vbe[i, j, j] else
+    vaccinated[i, j] + n_vos[i, j, j] + n_vod[i, j, j] + n_vbe[i, j, j]
 
+# aggregated time series for fitting mcmc
+update(tot_treated) <- sum(treated)
+update(tot_attended) <- tot_treated + sum(screened)
+update(entrants) <- if (step %% steps_per_year == 0)
+  sum(n_xU) else
+    entrants + sum(n_xU)
+update(leavers) <- if (step %% steps_per_year == 0)
+  sum(n_x) else
+    leavers + sum(n_x)
 
 ## Set up compartments
 ## Initial states are all 0 as we will provide a state vbector
@@ -146,6 +176,12 @@ initial(cum_diag_s[, ])     <- 0
 initial(cum_treated[, ])    <- 0
 initial(cum_screened[, ])   <- 0
 initial(cum_vaccinated[, ]) <- 0
+initial(incid[, ])      <- 0
+initial(diag_a[, ])     <- 0
+initial(diag_s[, ])     <- 0
+initial(treated[, ])    <- 0
+initial(screened[, ])   <- 0
+initial(vaccinated[, ]) <- 0
 initial(tot_treated) <- 0
 initial(tot_attended) <- 0
 initial(entrants) <- 0
@@ -171,6 +207,7 @@ dim(T0) <- c(n_group, n_vax)
 dim(C)    <- c(n_group, n_vax)
 dim(N)    <- c(n_group, n_vax)
 dim(n_xU) <- c(n_group, n_vax)
+dim(n_x)    <- n_group
 dim(Np)     <- n_group
 dim(prop_C) <- n_group
 dim(foi_LH) <- n_group
@@ -217,10 +254,17 @@ dim(cum_diag_s)     <- c(n_group, n_vax)
 dim(cum_treated)    <- c(n_group, n_vax)
 dim(cum_screened)   <- c(n_group, n_vax)
 dim(cum_vaccinated) <- c(n_group, n_vax)
+dim(incid)      <- c(n_group, n_vax)
+dim(diag_a)     <- c(n_group, n_vax)
+dim(diag_s)     <- c(n_group, n_vax)
+dim(treated)    <- c(n_group, n_vax)
+dim(screened)   <- c(n_group, n_vax)
+dim(vaccinated) <- c(n_group, n_vax)
 
 ## Parameters
 p[] <- user()
 q[] <- user()
+fix_N <- user()
 
 enr <- user()
 exr <- user()
