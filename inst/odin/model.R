@@ -45,7 +45,7 @@ update(N[, ]) <- U[i, j] + I[i, j] + A[i, j] + S[i, j] + T[i, j]
 n_x[] <- sum(n_Ux[i, ]) + sum(n_Ix[i, ]) + sum(n_Ax[i, ]) + sum(n_Sx[i, ]) +
   sum(n_Tx[i, ])
 
-n_xU[, 1] <- if (fix_N == 0)
+n_xU[, 1] <- if (fix_pop == 0)
   rpois(enr * q[i] * dt) else
     n_x[i]
 
@@ -55,7 +55,8 @@ prop_C[] <- sum(C[i, ]) / sum(N[i, ])
 Np[]    <- sum(N[i, ]) * p[i]
 
 foi_LH[] <- prop_C[i] * Np[i] / sum(Np[])
-update(lambda[]) <- p[i] * beta * (epsilon * prop_C[i] + (1 - epsilon) * sum(foi_LH[]))
+update(lambda[]) <-
+  p[i] * beta * (epsilon * prop_C[i] + (1 - epsilon) * sum(foi_LH[]))
 
 ## Individual probabilities of transition:
 r_UI[, ] <- lambda[i] * (1 - vea[j])
@@ -269,7 +270,7 @@ dim(vaccinated) <- c(n_group, n_vax)
 ## Parameters
 p[] <- user()
 q[] <- user()
-fix_N <- user()
+fix_pop <- user()
 
 enr <- user()
 exr <- user()

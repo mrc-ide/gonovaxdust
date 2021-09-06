@@ -106,7 +106,7 @@ HOSTDEVICE T odin_max(T x, T y) {
 // [[dust::param(eta_h_step, has_default = FALSE, default_value = NULL, rank = 1, min = -Inf, max = Inf, integer = FALSE)]]
 // [[dust::param(eta_l_step, has_default = FALSE, default_value = NULL, rank = 1, min = -Inf, max = Inf, integer = FALSE)]]
 // [[dust::param(exr, has_default = FALSE, default_value = NULL, rank = 0, min = -Inf, max = Inf, integer = FALSE)]]
-// [[dust::param(fix_N, has_default = FALSE, default_value = NULL, rank = 0, min = -Inf, max = Inf, integer = FALSE)]]
+// [[dust::param(fix_pop, has_default = FALSE, default_value = NULL, rank = 0, min = -Inf, max = Inf, integer = FALSE)]]
 // [[dust::param(I0, has_default = FALSE, default_value = NULL, rank = 2, min = -Inf, max = Inf, integer = FALSE)]]
 // [[dust::param(mu, has_default = FALSE, default_value = NULL, rank = 0, min = -Inf, max = Inf, integer = FALSE)]]
 // [[dust::param(nu, has_default = FALSE, default_value = NULL, rank = 0, min = -Inf, max = Inf, integer = FALSE)]]
@@ -405,7 +405,7 @@ public:
     std::vector<real_t> eta_h_step;
     std::vector<real_t> eta_l_step;
     real_t exr;
-    real_t fix_N;
+    real_t fix_pop;
     std::vector<real_t> I0;
     std::vector<real_t> initial_A;
     real_t initial_beta;
@@ -796,7 +796,7 @@ public:
     }
     for (int i = 1; i <= shared->dim_n_xU_1; ++i) {
       int j = 1;
-      internal.n_xU[i - 1 + shared->dim_n_xU_1 * (j - 1)] = (shared->fix_N == 0 ? dust::distr::rpois(rng_state, shared->enr * shared->q[i - 1] * shared->dt) : internal.n_x[i - 1]);
+      internal.n_xU[i - 1 + shared->dim_n_xU_1 * (j - 1)] = (shared->fix_pop == 0 ? dust::distr::rpois(rng_state, shared->enr * shared->q[i - 1] * shared->dt) : internal.n_x[i - 1]);
     }
     for (int i = 1; i <= shared->dim_A_1; ++i) {
       for (int j = 1; j <= shared->dim_A_2; ++j) {
@@ -1190,7 +1190,7 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   shared->enr = NA_REAL;
   shared->epsilon = NA_REAL;
   shared->exr = NA_REAL;
-  shared->fix_N = NA_REAL;
+  shared->fix_pop = NA_REAL;
   shared->mu = NA_REAL;
   shared->nu = NA_REAL;
   shared->psi = NA_REAL;
@@ -1209,7 +1209,7 @@ dust::pars_t<model> dust_pars<model>(cpp11::list user) {
   shared->eta_l_step = user_get_array_variable<real_t, 1>(user, "eta_l_step", shared->eta_l_step, dim_eta_l_step, NA_REAL, NA_REAL);
   shared->dim_eta_l_step = shared->eta_l_step.size();
   shared->exr = user_get_scalar<real_t>(user, "exr", shared->exr, NA_REAL, NA_REAL);
-  shared->fix_N = user_get_scalar<real_t>(user, "fix_N", shared->fix_N, NA_REAL, NA_REAL);
+  shared->fix_pop = user_get_scalar<real_t>(user, "fix_pop", shared->fix_pop, NA_REAL, NA_REAL);
   shared->mu = user_get_scalar<real_t>(user, "mu", shared->mu, NA_REAL, NA_REAL);
   shared->n_vax = user_get_scalar<int>(user, "n_vax", shared->n_vax, NA_REAL, NA_REAL);
   shared->nu = user_get_scalar<real_t>(user, "nu", shared->nu, NA_REAL, NA_REAL);

@@ -1,3 +1,5 @@
+##' @importFrom stats approx
+##' @importFrom gonovax gono_params
 gono_params <- function() {
   pars <- gonovax::gono_params(1)[[1]]
   tt <- pars$tt
@@ -9,17 +11,18 @@ gono_params <- function() {
   pars
 }
 
+##' @importFrom gonovax model_params
 model_params <- function(gono_params = NULL, demographic_params = NULL,
-                         init_params = NULL, vax_params = NULL, fix_N = FALSE) {
+                         init_params = NULL, vax_params = NULL,
+                         fix_pop = FALSE) {
   pars <- gonovax::model_params(gono_params, demographic_params,
                                 init_params, vax_params)
   pars <- convert_vax_params(pars)
-  pars$fix_N <- fix_N * 1
+  pars$fix_pop <- fix_pop * 1
 
   pars
 }
 
-##' @import stats
 convert_vax_params <- function(pars) {
 
   tt <- pars$vax_t
@@ -45,5 +48,3 @@ convert_vax_params <- function(pars) {
 
   pars
 }
-
-convert_vax_params(gonovax:::vax_params0())

@@ -2,7 +2,7 @@ context("model (check)")
 
 
 test_that("there are no infections when beta is 0", {
-  pars <- model_params(gono_params = gono_params(), fix_N = TRUE)
+  pars <- model_params(gono_params = gono_params(), fix_pop = TRUE)
   pars$beta_step[] <- 0
 
   mod <- model$new(pars, step = 0, n_particles = 10, seed = 1L)
@@ -18,7 +18,7 @@ test_that("there are no infections when beta is 0", {
 })
 
 test_that("there are no symptomatic infections when psi = 0", {
-  pars <- model_params(gono_params = gono_params(), fix_N = TRUE)
+  pars <- model_params(gono_params = gono_params(), fix_pop = TRUE)
   pars$psi <- 0
 
   mod <- model$new(pars, step = 0, n_particles = 10, seed = 1L)
@@ -34,7 +34,7 @@ test_that("there are no symptomatic infections when psi = 0", {
 })
 
 test_that("there are no asymptomatic infections when psi = 1", {
-  pars <- model_params(gono_params = gono_params(), fix_N = TRUE)
+  pars <- model_params(gono_params = gono_params(), fix_pop = TRUE)
   pars$psi <- 1
   pars$S0[, ] <- pars$A0[, ]
   pars$A0[, ] <- 0
@@ -51,7 +51,7 @@ test_that("there are no asymptomatic infections when psi = 1", {
 })
 
 test_that("there are no infections when A0 = 0", {
-  pars <- model_params(gono_params = gono_params(), fix_N = TRUE)
+  pars <- model_params(gono_params = gono_params(), fix_pop = TRUE)
   pars$A0[, ] <- 0
 
   mod <- model$new(pars, step = 0, n_particles = 10, seed = 1L)
@@ -65,7 +65,7 @@ test_that("there are no infections when A0 = 0", {
 })
 
 test_that("no-one is treated when mu and eta = 0", {
-  pars <- model_params(gono_params = gono_params(), fix_N = TRUE)
+  pars <- model_params(gono_params = gono_params(), fix_pop = TRUE)
   pars$mu <- pars$eta_h_step[] <- pars$eta_l_step[] <-  0
 
   mod <- model$new(pars, step = 0, n_particles = 10, seed = 1L)
@@ -83,7 +83,7 @@ test_that("the foi is calculated correctly", {
   vax_params <- gonovax:::vax_params_xvwv(uptake = 0.5, dur = 1,
                                 strategy = "VoA", vei = vei)
   pars <- model_params(gono_params = gono_params(),
-                       vax_params = vax_params, fix_N = TRUE)
+                       vax_params = vax_params, fix_pop = TRUE)
   expect_true(length(pars$beta_step) > 0)
 
 
@@ -126,7 +126,7 @@ test_that("time-varying eta works as expected", {
   gono_pars$eta_h_step <- gono_pars$eta_h_step * inc
   gono_pars$eta_l_step <- gono_pars$eta_l_step * inc / 2
 
-  pars <- model_params(gono_params = gono_pars, fix_N = TRUE)
+  pars <- model_params(gono_params = gono_pars, fix_pop = TRUE)
   mod <- model$new(pars, step = 0, n_particles = 5, seed = 1L)
   y <- mod$run(step_end = 10)
   y <- mod$transform_variables(y)
@@ -139,7 +139,7 @@ test_that("time-varying eta works as expected", {
   mod <- model$new(pars, step = 0, n_particles = 5, seed = 1L)
   y1 <- mod$run(step_end = 10)
   y1 <- mod$transform_variables(y1)
-  expect_equal(sum(y1$cum_screened[1, ,  ]), 0)
+  expect_equal(sum(y1$cum_screened[1, , ]), 0)
   expect_true(all(y1$cum_screened[2, , ] > 0))
 })
 
@@ -174,7 +174,7 @@ test_that("Bex model runs with vbe", {
   # with perfect efficacy
   pars <- model_params(gono_params = gono_params(),
                        vax_params = gonovax:::vax_params_xvwv(vbe = 1, vea = 1),
-                       fix_N = TRUE)
+                       fix_pop = TRUE)
   mod <- model$new(pars, step = 0, n_particles = 5, seed = 1L)
   y <- mod$run(step_end = 10)
   y <- mod$transform_variables(y)
@@ -203,7 +203,7 @@ test_that("Check vaccination on screening in Bex model", {
   vp <- gonovax:::vax_params_xvwv(vbe = 0, uptake = 1, strategy = "VoS",
                                   vea = 1, dur = 1)
   pars <- model_params(gono_params = gono_params(), vax_params = vp,
-                       fix_N = TRUE)
+                       fix_pop = TRUE)
   mod <- model$new(pars, step = 0, n_particles = 5, seed = 1L)
   y <- mod$run(step_end = 365)
   y <- mod$transform_variables(y)
@@ -233,7 +233,7 @@ test_that("Check vaccination on diagnosis in Bex model", {
   vp <- gonovax:::vax_params_xvwv(vbe = 0, uptake = 1, strategy = "VoD",
                                   vea = 0.5, dur = 1)
   pars <- model_params(gono_params = gono_params(), vax_params = vp,
-                       fix_N = TRUE)
+                       fix_pop = TRUE)
   mod <- model$new(pars, step = 0, n_particles = 5, seed = 1L)
   y <- mod$run(step_end = 365)
   y <- mod$transform_variables(y)
@@ -261,7 +261,7 @@ test_that("Check vaccination on attendance in Bex model", {
   vp <- gonovax:::vax_params_xvwv(vbe = 0, uptake = 1, strategy = "VoA",
                                   vea = 0.5, dur = 1)
   pars <- model_params(gono_params = gono_params(), vax_params = vp,
-                       fix_N = TRUE)
+                       fix_pop = TRUE)
   mod <- model$new(pars, step = 0, n_particles = 5, seed = 1L)
   y <- mod$run(step_end = 365)
   y <- mod$transform_variables(y)
@@ -291,7 +291,7 @@ test_that("incidence time series output correctly", {
   vp <- gonovax:::vax_params_xvwv(vbe = 0, uptake = 1, strategy = "VoA",
                                   vea = 0.5, dur = 1)
   pars <- model_params(gono_params = gono_params(), vax_params = vp,
-                       fix_N = TRUE)
+                       fix_pop = TRUE)
   mod <- model$new(pars, step = 0, n_particles = 5, seed = 1L)
   y <- mod$run(step_end = 365)
   y <- mod$transform_variables(y)
