@@ -29,8 +29,7 @@ update(eta[2]) <- if (as.integer(step) >= length(eta_h_step))
 ## Core equations for transitions between compartments:
 
 update(U[, ]) <- U[i, j] + n_xU[i, j] - n_UI[i, j] - n_Ux[i, j] + n_AU[i, j] +
-  n_TU[i, j] + sum(wU[i, j, ]) -
-  sum(n_vbe[i, j, ]) - sum(n_vod[i, j, ]) - sum(n_vos[i, j, ])
+  n_TU[i, j] + sum(wU[i, j, ]) - sum(n_v[i, j, ])
 
 update(I[, ]) <- I[i, j] + n_UI[i, j] - n_I[i, j] + sum(wI[i, j, ])
 
@@ -105,18 +104,30 @@ vax_switch <- if (as.integer(step) >= length(vax_step))
     vax_step[step + 1]
 
 ## at screening
-n_vos[, , ] <- rbinom(n_UU[i, k], vos[i, j, k] * vax_switch)
+
+n_vos[, ] <- rbinom(n_UU[i, j], u_vos[i, j] * vax_switch)
 ## on diagnosis
-n_vod[, , ] <- rbinom(n_TU[i, k], vod[i, j, k] * vax_switch)
+n_vod[, ] <- rbinom(n_TU[i, j], u_vod[i, j] * vax_switch)
 ## on entry - no switch as background rate
-n_vbe[, , ] <- rbinom(n_xU[i, k], vbe[i, j, k])
+n_vbe[, ] <- rbinom(n_xU[i, j], u_vbe[i, j])
+
+n_v[, , ] <- n_vos[i, k] * vos[i, j, k] + n_vod[i, k] * vod[i, j, k] +
+  n_vbe[i, k] * vbe[i, j, k]
 
 # Waning (inter-stratum transition) occurs after inter-compartment transition
-wU[, , ] <- rbinom(U[i, k] - n_UI[i, j] - n_Ux[i, j], w[j, k])
-wI[, , ] <- rbinom(I[i, k] - n_I[i, k], w[j, k])
-wA[, , ] <- rbinom(A[i, k] - n_A[i, k], w[j, k])
-wS[, , ] <- rbinom(S[i, k] - n_S[i, k], w[j, k])
-wT[, , ] <- rbinom(T[i, k] - n_T[i, k], w[j, k])
+
+n_Uw[, ] <- rbinom(U[i, j] - n_UI[i, j] - n_Ux[i, j], 1 - exp(D[j] * dt))
+n_Iw[, ] <- rbinom(I[i, j] - n_I[i, j], 1 - exp(D[j] * dt))
+n_Aw[, ] <- rbinom(A[i, j] - n_A[i, j], 1 - exp(D[j] * dt))
+n_Sw[, ] <- rbinom(S[i, j] - n_S[i, j], 1 - exp(D[j] * dt))
+n_Tw[, ] <- rbinom(T[i, j] - n_T[i, j], 1 - exp(D[j] * dt))
+
+wU[, , ] <- n_Uw[i, k] * w[j, k]
+wI[, , ] <- n_Iw[i, k] * w[j, k]
+wA[, , ] <- n_Aw[i, k] * w[j, k]
+wS[, , ] <- n_Sw[i, k] * w[j, k]
+wT[, , ] <- n_Tw[i, k] * w[j, k]
+
 
 ## outputs
 update(cum_incid[, ])    <- cum_incid[i, j] + n_UI[i, j]
@@ -124,8 +135,7 @@ update(cum_diag_a[, ])   <- cum_diag_a[i, j] + n_AT[i, j]
 update(cum_diag_s[, ])   <- cum_diag_s[i, j] + n_ST[i, j]
 update(cum_treated[, ])  <- cum_treated[i, j] + n_TU[i, j]
 update(cum_screened[, ]) <- cum_screened[i, j] + n_UU[i, j]
-update(cum_vaccinated[, ]) <-
-  cum_vaccinated[i, j] + n_vos[i, j, j] + n_vod[i, j, j] + n_vbe[i, j, j]
+update(cum_vaccinated[, ]) <- cum_vaccinated[i, j] + n_v[i, j, j]
 
 update(incid[, ]) <- if (step %% steps_per_year == 0)
   n_UI[i, j] else
@@ -143,12 +153,9 @@ update(screened[, ]) <- if (step %% steps_per_year == 0)
   n_UU[i, j] else
     screened[i, j] + n_UU[i, j]
 update(vaccinated[, ]) <- if (step %% steps_per_year == 0)
-  n_vos[i, j, j] + n_vod[i, j, j] + n_vbe[i, j, j] else
-    vaccinated[i, j] + n_vos[i, j, j] + n_vod[i, j, j] + n_vbe[i, j, j]
+  n_v[i, j, j] else
+    vaccinated[i, j] + n_v[i, j, j]
 
-# aggregated time series for fitting mcmc
-update(tot_treated) <- sum(treated)
-update(tot_attended) <- tot_treated + sum(screened)
 update(entrants) <- if (step %% steps_per_year == 0)
   sum(n_xU) else
     entrants + sum(n_xU)
@@ -182,8 +189,6 @@ initial(diag_s[, ])     <- 0
 initial(treated[, ])    <- 0
 initial(screened[, ])   <- 0
 initial(vaccinated[, ]) <- 0
-initial(tot_treated) <- 0
-initial(tot_attended) <- 0
 initial(entrants) <- 0
 initial(leavers) <- 0
 initial(beta) <- 0
@@ -283,6 +288,9 @@ rho     <- user()
 vbe[, , ] <- user()
 vos[, , ] <- user()
 vod[, , ] <- user()
+u_vbe[, ] <- user()
+u_vos[, ] <- user()
+u_vod[, ] <- user()
 
 # vaccine effects
 vea[] <- user() # efficacy against acquisition
@@ -290,7 +298,8 @@ ved[] <- user() # efficacy against duration of infection
 ves[] <- user() # efficacy against symptoms
 vei[] <- user() # efficacy against infectiousness
 
-w[, ]    <- user()
+w[, ] <- user()
+D[] <- user()
 vax_step[]  <- user()
 
 ## par dimensions
@@ -305,15 +314,25 @@ dim(vea)  <- n_vax
 dim(ved)  <- n_vax
 dim(ves)  <- n_vax
 dim(vei)  <- n_vax
-dim(vbe)   <- c(n_group, n_vax, n_vax)
-dim(vod)   <- c(n_group, n_vax, n_vax)
-dim(vos)   <- c(n_group, n_vax, n_vax)
-dim(w)    <- c(n_vax, n_vax)
+dim(vbe) <- c(n_group, n_vax, n_vax)
+dim(vod) <- c(n_group, n_vax, n_vax)
+dim(vos) <- c(n_group, n_vax, n_vax)
+dim(u_vbe) <- c(n_group, n_vax)
+dim(u_vod) <- c(n_group, n_vax)
+dim(u_vos) <- c(n_group, n_vax)
+dim(w) <- c(n_vax, n_vax)
+dim(D) <- c(n_vax)
 dim(vax_step) <- user()
 
-dim(n_vbe) <- c(n_group, n_vax, n_vax)
-dim(n_vos) <- c(n_group, n_vax, n_vax)
-dim(n_vod) <- c(n_group, n_vax, n_vax)
+dim(n_vbe) <- c(n_group, n_vax)
+dim(n_vos) <- c(n_group, n_vax)
+dim(n_vod) <- c(n_group, n_vax)
+dim(n_v) <- c(n_group, n_vax, n_vax)
+dim(n_Uw) <- c(n_group, n_vax)
+dim(n_Iw) <- c(n_group, n_vax)
+dim(n_Aw) <- c(n_group, n_vax)
+dim(n_Sw) <- c(n_group, n_vax)
+dim(n_Tw) <- c(n_group, n_vax)
 dim(wU)   <- c(n_group, n_vax, n_vax)
 dim(wI)   <- c(n_group, n_vax, n_vax)
 dim(wA)   <- c(n_group, n_vax, n_vax)
