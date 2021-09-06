@@ -19,6 +19,7 @@ model_params <- function(gono_params = NULL, demographic_params = NULL,
   pars
 }
 
+##' @import stats
 convert_vax_params <- function(pars) {
 
   tt <- pars$vax_t
