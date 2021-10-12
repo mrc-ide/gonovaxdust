@@ -180,11 +180,11 @@ test_that("Bex model runs with vbe", {
   y <- mod$transform_variables(y)
 
   expect_equal(y$U,
-               array(c(505325, 89205, 293, 52, 0, 0,
-                       505298, 89218, 303, 58, 0, 0,
-                       505336, 89208, 270, 48, 0, 0,
-                       505315, 89209, 290, 48, 0, 0,
-                       505329, 89207, 282, 47, 0, 0), dim = c(2L, 3L, 5L)))
+               array(c(505355, 89245, 275, 50, 0, 0,
+                       505317, 89208, 265, 61, 0, 0,
+                       505314, 89235, 268, 42, 0, 0,
+                       505358, 89208, 269, 52, 0, 0,
+                       505357, 89224, 287, 45, 0, 0), dim = c(2L, 3L, 5L)))
   # check all entrants are being vaccinated
   expect_equivalent(colSums(y$cum_vaccinated[, 1, ]),  y$entrants)
   # check no-one else is
@@ -209,11 +209,11 @@ test_that("Check vaccination on screening in Bex model", {
   y <- mod$transform_variables(y)
 
   expect_equal(y$U,
-               array(c(330701, 57987, 117622, 20574, 61320, 10598,
-                       330850, 57762, 117559, 20642, 61216, 10723,
-                       330621, 57769, 117687, 20624, 61279, 10681,
-                       330648, 57604, 117929, 20757, 61029, 10738,
-                       330072, 57912, 117909, 20601, 61626, 10591),
+               array(c(330672, 57846, 117489, 20492, 61452, 10667,
+                       330602, 57916, 117222, 20600, 61778, 10579,
+                       330355, 57733, 117714, 20612, 61530, 10772,
+                       329903, 57755, 118135, 20683, 61569, 10697,
+                       330741, 57672, 117632, 20687, 61215, 10648),
                      dim = c(2L, 3L, 5L)))
   # check all screened U, W are being vaccinated, but not V
   expect_equivalent(y$cum_vaccinated[, -2, ],  y$cum_screened[, -2, ])
@@ -239,11 +239,11 @@ test_that("Check vaccination on diagnosis in Bex model", {
   y <- mod$transform_variables(y)
 
   expect_equal(y$U,
-               array(c(508542, 86919, 516, 1136, 411, 508,
-                       508460, 86713, 550, 1185, 443, 527,
-                       508577, 86995, 522, 1059, 400, 496,
-                       508570, 86904, 543, 1142, 412, 571,
-                       508577, 86933, 521, 1100, 428, 512),
+               array(c(508524, 86799, 541, 1159, 425, 558,
+                       508575, 87070, 520, 1008, 411, 521,
+                       508618, 87085, 526, 1082, 397, 511,
+                       508589, 86923, 539, 1092, 391, 528,
+                       508597, 86872, 518, 1134, 394, 603),
                      dim = c(2L, 3L, 5L)))
   # check all treated U, W people are being vaccinated (but not V)
   expect_equivalent(y$cum_vaccinated[, -2, ],  y$cum_treated[, -2, ])
@@ -267,11 +267,11 @@ test_that("Check vaccination on attendance in Bex model", {
   y <- mod$transform_variables(y)
 
   expect_equal(y$U,
-               array(c(329335, 56568, 118180, 21147, 62073, 11102,
-                       329848, 56600, 117973, 21141, 61702, 11032,
-                       330278, 56546, 118171, 21172, 61136, 11012,
-                       329395, 56936, 118459, 21234, 61743, 10839,
-                       330027, 56283, 118013, 21592, 61541, 10944),
+               array(c(329664, 56857, 118068, 21308, 61824, 10814,
+                       329777, 56489, 118100, 21322, 61729, 11081,
+                       329633, 56596, 118228, 21289, 61672, 10964,
+                       330063, 56579, 118288, 21193, 61193, 11096,
+                       329817, 56675, 118284, 21291, 61485, 10991),
                      dim = c(2L, 3L, 5L)))
   # check all treated U, W people are being vaccinated (but not V)
   expect_equivalent(y$cum_vaccinated[, -2, ],

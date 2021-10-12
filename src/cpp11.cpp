@@ -3,26 +3,27 @@
 
 
 #include "cpp11/declarations.hpp"
+#include <R_ext/Visibility.h>
 
 // model.cpp
-SEXP dust_model_alloc(cpp11::list r_pars, bool pars_multi, size_t step, cpp11::sexp r_n_particles, size_t n_threads, cpp11::sexp r_seed, cpp11::sexp device_config);
-extern "C" SEXP _gonovaxdust_dust_model_alloc(SEXP r_pars, SEXP pars_multi, SEXP step, SEXP r_n_particles, SEXP n_threads, SEXP r_seed, SEXP device_config) {
+SEXP dust_model_alloc(cpp11::list r_pars, bool pars_multi, size_t step, cpp11::sexp r_n_particles, size_t n_threads, cpp11::sexp r_seed, bool deterministic, cpp11::sexp device_config);
+extern "C" SEXP _gonovaxdust_dust_model_alloc(SEXP r_pars, SEXP pars_multi, SEXP step, SEXP r_n_particles, SEXP n_threads, SEXP r_seed, SEXP deterministic, SEXP device_config) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust_model_alloc(cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(r_pars), cpp11::as_cpp<cpp11::decay_t<bool>>(pars_multi), cpp11::as_cpp<cpp11::decay_t<size_t>>(step), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_n_particles), cpp11::as_cpp<cpp11::decay_t<size_t>>(n_threads), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_seed), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(device_config)));
+    return cpp11::as_sexp(dust_model_alloc(cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(r_pars), cpp11::as_cpp<cpp11::decay_t<bool>>(pars_multi), cpp11::as_cpp<cpp11::decay_t<size_t>>(step), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_n_particles), cpp11::as_cpp<cpp11::decay_t<size_t>>(n_threads), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(r_seed), cpp11::as_cpp<cpp11::decay_t<bool>>(deterministic), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(device_config)));
   END_CPP11
 }
 // model.cpp
-SEXP dust_model_run(SEXP ptr, size_t step_end, bool device, bool deterministic);
-extern "C" SEXP _gonovaxdust_dust_model_run(SEXP ptr, SEXP step_end, SEXP device, SEXP deterministic) {
+SEXP dust_model_run(SEXP ptr, size_t step_end, bool device);
+extern "C" SEXP _gonovaxdust_dust_model_run(SEXP ptr, SEXP step_end, SEXP device) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust_model_run(cpp11::as_cpp<cpp11::decay_t<SEXP>>(ptr), cpp11::as_cpp<cpp11::decay_t<size_t>>(step_end), cpp11::as_cpp<cpp11::decay_t<bool>>(device), cpp11::as_cpp<cpp11::decay_t<bool>>(deterministic)));
+    return cpp11::as_sexp(dust_model_run(cpp11::as_cpp<cpp11::decay_t<SEXP>>(ptr), cpp11::as_cpp<cpp11::decay_t<size_t>>(step_end), cpp11::as_cpp<cpp11::decay_t<bool>>(device)));
   END_CPP11
 }
 // model.cpp
-SEXP dust_model_simulate(SEXP ptr, cpp11::sexp step_end, bool device, bool deterministic);
-extern "C" SEXP _gonovaxdust_dust_model_simulate(SEXP ptr, SEXP step_end, SEXP device, SEXP deterministic) {
+SEXP dust_model_simulate(SEXP ptr, cpp11::sexp step_end, bool device);
+extern "C" SEXP _gonovaxdust_dust_model_simulate(SEXP ptr, SEXP step_end, SEXP device) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust_model_simulate(cpp11::as_cpp<cpp11::decay_t<SEXP>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(step_end), cpp11::as_cpp<cpp11::decay_t<bool>>(device), cpp11::as_cpp<cpp11::decay_t<bool>>(deterministic)));
+    return cpp11::as_sexp(dust_model_simulate(cpp11::as_cpp<cpp11::decay_t<SEXP>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(step_end), cpp11::as_cpp<cpp11::decay_t<bool>>(device)));
   END_CPP11
 }
 // model.cpp
@@ -33,17 +34,10 @@ extern "C" SEXP _gonovaxdust_dust_model_set_index(SEXP ptr, SEXP r_index) {
   END_CPP11
 }
 // model.cpp
-SEXP dust_model_set_state(SEXP ptr, SEXP r_state, SEXP r_step, bool deterministic);
-extern "C" SEXP _gonovaxdust_dust_model_set_state(SEXP ptr, SEXP r_state, SEXP r_step, SEXP deterministic) {
+SEXP dust_model_update_state(SEXP ptr, SEXP r_pars, SEXP r_state, SEXP r_step, SEXP r_set_initial_state);
+extern "C" SEXP _gonovaxdust_dust_model_update_state(SEXP ptr, SEXP r_pars, SEXP r_state, SEXP r_step, SEXP r_set_initial_state) {
   BEGIN_CPP11
-    return cpp11::as_sexp(dust_model_set_state(cpp11::as_cpp<cpp11::decay_t<SEXP>>(ptr), cpp11::as_cpp<cpp11::decay_t<SEXP>>(r_state), cpp11::as_cpp<cpp11::decay_t<SEXP>>(r_step), cpp11::as_cpp<cpp11::decay_t<bool>>(deterministic)));
-  END_CPP11
-}
-// model.cpp
-SEXP dust_model_reset(SEXP ptr, cpp11::list r_pars, size_t step);
-extern "C" SEXP _gonovaxdust_dust_model_reset(SEXP ptr, SEXP r_pars, SEXP step) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(dust_model_reset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(r_pars), cpp11::as_cpp<cpp11::decay_t<size_t>>(step)));
+    return cpp11::as_sexp(dust_model_update_state(cpp11::as_cpp<cpp11::decay_t<SEXP>>(ptr), cpp11::as_cpp<cpp11::decay_t<SEXP>>(r_pars), cpp11::as_cpp<cpp11::decay_t<SEXP>>(r_state), cpp11::as_cpp<cpp11::decay_t<SEXP>>(r_step), cpp11::as_cpp<cpp11::decay_t<SEXP>>(r_set_initial_state)));
   END_CPP11
 }
 // model.cpp
@@ -73,13 +67,6 @@ SEXP dust_model_resample(SEXP ptr, cpp11::doubles r_weights);
 extern "C" SEXP _gonovaxdust_dust_model_resample(SEXP ptr, SEXP r_weights) {
   BEGIN_CPP11
     return cpp11::as_sexp(dust_model_resample(cpp11::as_cpp<cpp11::decay_t<SEXP>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(r_weights)));
-  END_CPP11
-}
-// model.cpp
-SEXP dust_model_set_pars(SEXP ptr, cpp11::list r_pars);
-extern "C" SEXP _gonovaxdust_dust_model_set_pars(SEXP ptr, SEXP r_pars) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(dust_model_set_pars(cpp11::as_cpp<cpp11::decay_t<SEXP>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(r_pars)));
   END_CPP11
 }
 // model.cpp
@@ -148,30 +135,8 @@ extern "C" SEXP _gonovaxdust_dust_model_device_info() {
 }
 
 extern "C" {
-/* .Call calls */
-extern SEXP _gonovaxdust_dust_model_alloc(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_capabilities();
-extern SEXP _gonovaxdust_dust_model_compare_data(SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_device_info();
-extern SEXP _gonovaxdust_dust_model_filter(SEXP, SEXP, SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_n_state(SEXP);
-extern SEXP _gonovaxdust_dust_model_reorder(SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_resample(SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_reset(SEXP, SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_rng_state(SEXP, SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_run(SEXP, SEXP, SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_set_data(SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_set_index(SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_set_n_threads(SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_set_pars(SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_set_rng_state(SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_set_state(SEXP, SEXP, SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_simulate(SEXP, SEXP, SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_state(SEXP, SEXP);
-extern SEXP _gonovaxdust_dust_model_step(SEXP);
-
 static const R_CallMethodDef CallEntries[] = {
-    {"_gonovaxdust_dust_model_alloc",         (DL_FUNC) &_gonovaxdust_dust_model_alloc,         7},
+    {"_gonovaxdust_dust_model_alloc",         (DL_FUNC) &_gonovaxdust_dust_model_alloc,         8},
     {"_gonovaxdust_dust_model_capabilities",  (DL_FUNC) &_gonovaxdust_dust_model_capabilities,  0},
     {"_gonovaxdust_dust_model_compare_data",  (DL_FUNC) &_gonovaxdust_dust_model_compare_data,  2},
     {"_gonovaxdust_dust_model_device_info",   (DL_FUNC) &_gonovaxdust_dust_model_device_info,   0},
@@ -179,23 +144,21 @@ static const R_CallMethodDef CallEntries[] = {
     {"_gonovaxdust_dust_model_n_state",       (DL_FUNC) &_gonovaxdust_dust_model_n_state,       1},
     {"_gonovaxdust_dust_model_reorder",       (DL_FUNC) &_gonovaxdust_dust_model_reorder,       2},
     {"_gonovaxdust_dust_model_resample",      (DL_FUNC) &_gonovaxdust_dust_model_resample,      2},
-    {"_gonovaxdust_dust_model_reset",         (DL_FUNC) &_gonovaxdust_dust_model_reset,         3},
     {"_gonovaxdust_dust_model_rng_state",     (DL_FUNC) &_gonovaxdust_dust_model_rng_state,     3},
-    {"_gonovaxdust_dust_model_run",           (DL_FUNC) &_gonovaxdust_dust_model_run,           4},
+    {"_gonovaxdust_dust_model_run",           (DL_FUNC) &_gonovaxdust_dust_model_run,           3},
     {"_gonovaxdust_dust_model_set_data",      (DL_FUNC) &_gonovaxdust_dust_model_set_data,      2},
     {"_gonovaxdust_dust_model_set_index",     (DL_FUNC) &_gonovaxdust_dust_model_set_index,     2},
     {"_gonovaxdust_dust_model_set_n_threads", (DL_FUNC) &_gonovaxdust_dust_model_set_n_threads, 2},
-    {"_gonovaxdust_dust_model_set_pars",      (DL_FUNC) &_gonovaxdust_dust_model_set_pars,      2},
     {"_gonovaxdust_dust_model_set_rng_state", (DL_FUNC) &_gonovaxdust_dust_model_set_rng_state, 2},
-    {"_gonovaxdust_dust_model_set_state",     (DL_FUNC) &_gonovaxdust_dust_model_set_state,     4},
-    {"_gonovaxdust_dust_model_simulate",      (DL_FUNC) &_gonovaxdust_dust_model_simulate,      4},
+    {"_gonovaxdust_dust_model_simulate",      (DL_FUNC) &_gonovaxdust_dust_model_simulate,      3},
     {"_gonovaxdust_dust_model_state",         (DL_FUNC) &_gonovaxdust_dust_model_state,         2},
     {"_gonovaxdust_dust_model_step",          (DL_FUNC) &_gonovaxdust_dust_model_step,          1},
+    {"_gonovaxdust_dust_model_update_state",  (DL_FUNC) &_gonovaxdust_dust_model_update_state,  5},
     {NULL, NULL, 0}
 };
 }
 
-extern "C" void R_init_gonovaxdust(DllInfo* dll){
+extern "C" attribute_visible void R_init_gonovaxdust(DllInfo* dll){
   R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
   R_useDynamicSymbols(dll, FALSE);
   R_forceSymbols(dll, TRUE);
